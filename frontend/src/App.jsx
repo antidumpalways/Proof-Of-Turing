@@ -1,6 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { usePotData } from './hooks/usePotData'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import AgentCard from './components/AgentCard'
+import AgentList from './components/AgentList'
+import ScoreChart from './components/ScoreChart'
+import VerificationBadge from './components/VerificationBadge'
+import LiveMonitor from './components/LiveMonitor'
 
 // ─── ─── ─── ─── ─── ─── ─── ───
 //  ROOT
@@ -19,27 +23,37 @@ export default function App() {
 
 function Landing({ onEnter }) {
   return (
-    <div className="min-h-screen bg-[#050508] text-white font-sans overflow-hidden">
-      {/* Animated grid */}
-      <div className="fixed inset-0" style={{
-        backgroundImage: `
-          linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
-        `,
-        backgroundSize: '48px 48px',
-      }} />
-      <div className="fixed inset-0 bg-gradient-radial from-blue-500/3 via-transparent to-transparent pointer-events-none" />
+    <div className="relative min-h-screen bg-[#050508] text-white font-sans overflow-hidden">
+      {/* Animated grid background */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+        }}
+      />
+      {/* Radial gradient glow */}
+      <div className="fixed inset-0 bg-gradient-radial from-blue-500/4 via-transparent to-transparent pointer-events-none" />
+
+      {/* Floating orbs */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-emerald-500/3 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+      <div className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/3 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-8 pb-24">
         {/* Header */}
         <nav className="flex items-center justify-between mb-36">
           <div className="flex items-center gap-3">
             <Logo />
-            <span className="font-semibold text-sm text-white/80">Proof of Turing</span>
+            <span className="font-semibold text-sm text-white/60">Proof of Turing</span>
           </div>
           <button
             onClick={onEnter}
-            className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all active:scale-[0.97]"
+            className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-semibold
+              hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10
+              active:scale-[0.97] transition-all duration-200"
           >
             Launch App
           </button>
@@ -47,12 +61,16 @@ function Landing({ onEnter }) {
 
         {/* Hero */}
         <div className="text-center mb-32">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/5 text-[11px] text-white/40 mb-10">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-[11px] text-white/30 font-medium mb-10
+            hover:bg-white/[0.05] transition-all duration-300">
+            <span className="relative flex w-2 h-2">
+              <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />
+              <span className="relative rounded-full w-2 h-2 bg-emerald-400" />
+            </span>
             Deployed on Mantle Network
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-bold tracking-tight leading-[0.95] mb-6">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[0.92] mb-6">
             Prove your agent
             <br />
             <span className="bg-gradient-to-r from-blue-300 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
@@ -60,43 +78,72 @@ function Landing({ onEnter }) {
             </span>
           </h1>
 
-          <p className="text-white/20 text-base md:text-lg max-w-xl mx-auto leading-relaxed mb-10">
+          <p className="text-base md:text-lg text-white/[0.12] max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
             Proof-of-Turing is an inverse captcha for Web3 — it verifies
             whether a wallet is operated by an autonomous AI agent or a
-            human running scripts.
+            human running scripts through four-dimensional behavioral analysis.
           </p>
 
           <div className="flex items-center justify-center gap-4">
-            <button onClick={onEnter}
-              className="px-8 py-3.5 rounded-full bg-white text-black font-semibold text-sm hover:bg-white/90 transition-all active:scale-[0.97] shadow-lg shadow-white/5">
+            <button
+              onClick={onEnter}
+              className="group px-8 py-3.5 rounded-full bg-white text-black font-semibold text-sm
+                hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/10
+                active:scale-[0.97] transition-all duration-200"
+            >
               Enter Dashboard
             </button>
-            <button className="px-8 py-3.5 rounded-full bg-white/5 border border-white/5 text-white/50 font-medium text-sm hover:bg-white/10 transition-all">
+            <button
+              className="px-8 py-3.5 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/40 font-medium text-sm
+                hover:bg-white/[0.06] hover:border-white/10 hover:text-white/60 hover:-translate-y-0.5
+                active:scale-[0.97] transition-all duration-200"
+            >
               Read the Paper
             </button>
           </div>
         </div>
 
-        {/* How it works */}
+        {/* How it Works */}
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-[11px] text-white/20 uppercase tracking-[2px] font-semibold mb-3">How it works</div>
-            <h2 className="text-2xl font-semibold tracking-tight">Four dimensions of agentic analysis</h2>
+            <div className="text-[10px] text-white/[0.08] uppercase tracking-[3px] font-semibold mb-4">How it works</div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white/80">
+              Four dimensions of agentic analysis
+            </h2>
+            <p className="text-sm text-white/[0.08] mt-3 max-w-md mx-auto">
+              Our oracle evaluates AI agents across four independent dimensions to determine authenticity
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { num: '01', title: 'Time Entropy', desc: 'Measures natural vs mechanical timing patterns in agent actions.' },
               { num: '02', title: 'Response Time', desc: 'Analyzes reaction speed to market events — AI needs time to think.' },
               { num: '03', title: 'Decision Pattern', desc: 'Evaluates strategy diversity — real AI adapts, scripts repeat.' },
               { num: '04', title: 'Data Access', desc: 'Checks if agent reads on-chain data before making decisions.' },
             ].map((f, i) => (
-              <div key={i} className="group rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 hover:bg-white/[0.04] hover:border-white/10 transition-all">
-                <div className="text-[10px] font-mono text-white/20 mb-4">{f.num}</div>
-                <div className="font-semibold text-sm mb-2 text-white/80 group-hover:text-white transition-colors">{f.title}</div>
-                <div className="text-xs text-white/25 leading-relaxed">{f.desc}</div>
+              <div
+                key={i}
+                className="group relative rounded-2xl bg-white/[0.015] border border-white/[0.06] p-6
+                  hover:bg-white/[0.03] hover:border-white/10 hover:-translate-y-1
+                  transition-all duration-300 ease-out"
+              >
+                {/* Hover gradient */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="relative">
+                  <div className="text-[10px] font-mono text-white/[0.08] mb-4 font-semibold">{f.num}</div>
+                  <div className="font-semibold text-sm mb-2 text-white/60 group-hover:text-white/90 transition-colors duration-200">{f.title}</div>
+                  <div className="text-xs text-white/[0.12] leading-relaxed">{f.desc}</div>
+                </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-32">
+          <div className="text-[10px] text-white/[0.04] font-mono">
+            Built for Mantle Network · EIP-8004 Compatible
           </div>
         </div>
       </div>
@@ -132,7 +179,9 @@ function DashboardApp({ onHome }) {
   const stats = {
     total: totalAgents,
     verified: agents.filter(a => a.is_verified).length,
-    avgScore: agents.length ? Math.round(agents.reduce((s, a) => s + (a.agentic_score || 0), 0) / agents.length) : 0,
+    avgScore: agents.length
+      ? Math.round(agents.reduce((s, a) => s + (a.agentic_score || 0), 0) / agents.length)
+      : 0,
     heartbeats: agents.reduce((s, a) => s + (a.heartbeats_count || 0), 0),
   }
 
@@ -141,7 +190,10 @@ function DashboardApp({ onHome }) {
     setDetailLoading(true)
     setVerifyResult(null)
     try {
-      const [d, h] = await Promise.all([getAgentScore(agent.wallet), getScoreHistory(agent.wallet)])
+      const [d, h] = await Promise.all([
+        getAgentScore(agent.wallet),
+        getScoreHistory(agent.wallet),
+      ])
       setDetail(d)
       setHistory(h)
     } catch (e) {
@@ -187,11 +239,28 @@ function DashboardApp({ onHome }) {
     }
     switch (nav) {
       case 'dashboard':
-        return <DashboardView agents={agents} loading={loading} error={error} page={page} totalPages={totalPages}
-          totalAgents={totalAgents} stats={stats} onPageChange={setPage} onAgentClick={handleAgentClick}
-          onVerify={handleVerify} />
+        return (
+          <DashboardView
+            agents={agents}
+            loading={loading}
+            error={error}
+            page={page}
+            totalPages={totalPages}
+            totalAgents={totalAgents}
+            stats={stats}
+            onPageChange={setPage}
+            onAgentClick={handleAgentClick}
+            onVerify={handleVerify}
+          />
+        )
       case 'verify':
-        return <VerifyView result={verifyResult} loading={verifyLoading} onVerify={handleVerify} />
+        return (
+          <VerifyView
+            result={verifyResult}
+            loading={verifyLoading}
+            onVerify={handleVerify}
+          />
+        )
       case 'monitor':
         return <MonitorView />
       default:
@@ -201,35 +270,58 @@ function DashboardApp({ onHome }) {
 
   return (
     <div className="min-h-screen bg-[#050508] text-white font-sans">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#050508]/70 backdrop-blur-2xl border-b border-white/[0.04]">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+      {/* Glassmorphic Header */}
+      <header className="sticky top-0 z-50 bg-[#050508]/60 backdrop-blur-2xl border-b border-white/[0.04]
+        supports-[backdrop-filter]:bg-[#050508]/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button onClick={onHome} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <button
+              onClick={onHome}
+              className="flex items-center gap-3 hover:opacity-70 transition-all duration-200"
+            >
               <Logo small />
-              <span className="text-sm font-semibold text-white/80 hidden sm:block">Proof of Turing</span>
+              <span className="text-sm font-semibold text-white/50 hidden sm:block">Proof of Turing</span>
             </button>
-            <span className="w-px h-5 bg-white/[0.06]" />
+            <span className="w-px h-5 bg-white/[0.04]" />
             <nav className="flex items-center gap-1">
               {NAV.map(n => (
-                <button key={n.id} onClick={() => { handleBack(); setNav(n.id) }}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    nav === n.id && !selected ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'
-                  }`}>
+                <button
+                  key={n.id}
+                  onClick={() => { handleBack(); setNav(n.id) }}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    nav === n.id && !selected
+                      ? 'bg-white/10 text-white shadow-sm'
+                      : 'text-white/20 hover:text-white/50 hover:bg-white/[0.03]'
+                  }`}
+                >
                   {n.label}
                 </button>
               ))}
             </nav>
           </div>
+
+          {/* Oracle Status */}
           <div className="flex items-center gap-3">
-            <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-            <span className="text-[11px] text-white/25 font-medium hidden sm:block">{isOnline ? 'Oracle Online' : 'Disconnected'}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+              <span className="relative flex w-2 h-2">
+                {isOnline && (
+                  <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />
+                )}
+                <span className={`relative rounded-full w-2 h-2 ${isOnline ? 'bg-emerald-400' : 'bg-red-400'}`} />
+              </span>
+              <span className="text-[10px] text-white/20 font-medium hidden sm:block">
+                {isOnline ? 'Oracle Online' : 'Disconnected'}
+              </span>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {renderContent()}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Page transition */}
+        <div className="animate-in fade-in duration-500">
+          {renderContent()}
+        </div>
       </main>
     </div>
   )
@@ -239,78 +331,100 @@ function DashboardApp({ onHome }) {
 //  DASHBOARD VIEW
 // ─── ─── ─── ─── ─── ─── ─── ───
 
-function DashboardView({ agents, loading, error, page, totalPages, totalAgents, stats, onPageChange, onAgentClick, onVerify }) {
-  const [query, setQuery] = useState('')
-
-  const handleSubmit = (e) => { e.preventDefault(); onVerify(query) }
-
-  // Glowing stat cards
+function DashboardView({
+  agents, loading, error, page, totalPages, totalAgents, stats,
+  onPageChange, onAgentClick, onVerify,
+}) {
   const statCards = [
-    { label: 'Total Agents', value: stats.total, color: 'from-blue-500/20 to-cyan-500/5' },
-    { label: 'Verified AI', value: stats.verified, color: 'from-emerald-500/20 to-green-500/5' },
-    { label: 'Avg Score', value: stats.avgScore, color: 'from-amber-500/20 to-yellow-500/5' },
-    { label: 'Heartbeats', value: stats.heartbeats, color: 'from-violet-500/20 to-purple-500/5' },
+    {
+      label: 'Total Agents', value: stats.total,
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+        </svg>
+      ),
+      color: 'from-blue-500/10 to-cyan-500/5',
+      textColor: 'text-blue-400',
+    },
+    {
+      label: 'Verified AI', value: stats.verified,
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ),
+      color: 'from-emerald-500/10 to-green-500/5',
+      textColor: 'text-emerald-400',
+    },
+    {
+      label: 'Avg Score', value: stats.avgScore,
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      ),
+      color: 'from-amber-500/10 to-yellow-500/5',
+      textColor: 'text-amber-400',
+    },
+    {
+      label: 'Heartbeats', value: stats.heartbeats,
+      icon: (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+      ),
+      color: 'from-violet-500/10 to-purple-500/5',
+      textColor: 'text-violet-400',
+    },
   ]
 
   return (
     <div className="space-y-8">
-      {/* Stats */}
+      {/* Hero section */}
+      <div className="mb-2">
+        <h1 className="text-xl font-bold tracking-tight text-white/80">Dashboard</h1>
+        <p className="text-sm text-white/20 mt-1">Overview of registered agents and their AI verification status</p>
+      </div>
+
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {statCards.map((s, i) => (
-          <div key={i} className="relative rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 overflow-hidden group hover:bg-white/[0.04] transition-all">
+          <div
+            key={i}
+            className="group relative rounded-2xl bg-white/[0.015] border border-white/[0.06] p-5 overflow-hidden
+              hover:bg-white/[0.03] hover:border-white/10 hover:-translate-y-0.5
+              transition-all duration-300 ease-out"
+          >
             <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
             <div className="relative">
-              <div className="text-3xl font-bold tracking-tight text-white/90">{s.value}</div>
-              <div className="text-[11px] text-white/25 font-medium mt-1 uppercase tracking-wider">{s.label}</div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`${s.textColor} opacity-30 group-hover:opacity-60 transition-opacity duration-300`}>
+                  {s.icon}
+                </div>
+              </div>
+              <div className="text-3xl font-bold tracking-tight text-white/80 group-hover:text-white transition-colors duration-200">
+                {s.value}
+              </div>
+              <div className="text-[10px] text-white/15 font-medium mt-1 uppercase tracking-wider">
+                {s.label}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Search */}
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <div className="relative flex-1">
-          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>
-          </svg>
-          <input
-            value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="Search wallet address..."
-            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-11 pr-4 py-3 text-sm font-mono text-white/80 placeholder-white/15 outline-none focus:border-white/10 focus:bg-white/[0.05] transition-all"
-          />
-        </div>
-        <button type="submit"
-          className="px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all active:scale-[0.97]">
-          Verify
-        </button>
-      </form>
-
-      {/* Agents */}
-      {loading ? (
-        <div className="flex justify-center py-24"><Spinner /></div>
-      ) : error ? (
-        <div className="rounded-xl bg-red-400/5 border border-red-400/10 p-4 text-sm text-red-400/60">{error}</div>
-      ) : agents.length === 0 ? (
-        <div className="text-center py-24"><p className="text-white/15 text-sm">No agents registered yet</p></div>
-      ) : (
-        <>
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-white/20 font-mono">{agents.length} of {totalAgents} agents</div>
-          </div>
-          <div className="space-y-2">
-            {agents.map(a => <AgentRow key={a.wallet} agent={a} onClick={onAgentClick} />)}
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-6 pt-4">
-              <button disabled={page <= 1} onClick={() => onPageChange(page - 1)}
-                className="text-xs text-white/25 hover:text-white/60 disabled:opacity-20 transition-colors">← Prev</button>
-              <span className="text-xs text-white/15 font-mono">{page} / {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}
-                className="text-xs text-white/25 hover:text-white/60 disabled:opacity-20 transition-colors">Next →</button>
-            </div>
-          )}
-        </>
-      )}
+      {/* Agent List */}
+      <AgentList
+        agents={agents}
+        loading={loading}
+        error={error}
+        page={page}
+        totalPages={totalPages}
+        totalAgents={totalAgents}
+        onPageChange={onPageChange}
+        onAgentClick={onAgentClick}
+        onSearch={onVerify}
+      />
     </div>
   )
 }
@@ -322,37 +436,65 @@ function DashboardView({ agents, loading, error, page, totalPages, totalAgents, 
 function AgentRow({ agent, onClick }) {
   const score = agent.agentic_score || 0
   const isVerified = agent.is_verified
-  const addr = agent.wallet ? `${agent.wallet.slice(0, 8)}...${agent.wallet.slice(-6)}` : 'Unknown'
 
-  const statusLabel = isVerified ? 'Verified AI' : score >= 40 ? 'Pending' : 'Human'
-  const statusBorder = isVerified ? 'border-emerald-500/20' : score >= 40 ? 'border-amber-500/20' : 'border-red-500/20'
+  const statusLabel = isVerified ? 'verified' : score >= 40 ? 'pending' : 'failed'
+  const statusBorder = isVerified
+    ? 'border-emerald-500/15 group-hover:border-emerald-500/30'
+    : score >= 40
+      ? 'border-amber-500/15 group-hover:border-amber-500/30'
+      : 'border-red-500/15 group-hover:border-red-500/30'
   const statusText = isVerified ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'
   const scoreColor = isVerified ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'
-  const glowColor = isVerified ? 'rgba(52,211,153,0.06)' : score >= 40 ? 'rgba(251,191,36,0.06)' : 'rgba(248,113,113,0.06)'
+  const accentGradient = isVerified
+    ? 'bg-emerald-400/50'
+    : score >= 40
+      ? 'bg-amber-400/50'
+      : 'bg-red-400/50'
+
+  const addr = agent.wallet
+    ? `${agent.wallet.slice(0, 8)}...${agent.wallet.slice(-6)}`
+    : 'Unknown'
 
   return (
-    <div onClick={() => onClick?.(agent)}
-      className="group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] px-5 py-4 flex items-center gap-4 cursor-pointer
-        hover:bg-white/[0.04] hover:border-white/10 transition-all overflow-hidden"
-      style={{ boxShadow: `inset 0 0 40px ${glowColor}` }}
+    <div
+      onClick={() => onClick?.(agent)}
+      className="group relative rounded-2xl bg-white/[0.015] border border-white/[0.06] px-5 py-4
+        flex items-center gap-4 cursor-pointer overflow-hidden
+        hover:bg-white/[0.03] hover:border-white/10 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5
+        active:scale-[0.99] transition-all duration-300 ease-out"
     >
-      {/* Left accent */}
-      <div className={`absolute left-0 top-2 bottom-2 w-0.5 rounded-full transition-opacity opacity-0 group-hover:opacity-100 ${
-        isVerified ? 'bg-emerald-400/50' : score >= 40 ? 'bg-amber-400/50' : 'bg-red-400/50'
-      }`} />
+      {/* Left accent bar - animated on hover */}
+      <div className={`absolute left-0 top-3 bottom-3 w-0.5 rounded-full transition-all duration-300
+        opacity-0 group-hover:opacity-100 scale-y-0 group-hover:scale-y-100 origin-top ${accentGradient}`}
+      />
 
+      {/* Avatar */}
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+        bg-white/[0.03] border ${isVerified ? 'border-emerald-500/10' : score >= 40 ? 'border-amber-500/10' : 'border-red-500/10'}
+        group-hover:scale-105 transition-transform duration-300`}
+      >
+        <span className="text-base">{isVerified ? '🤖' : score >= 40 ? '🤔' : '👤'}</span>
+      </div>
+
+      {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="font-mono text-sm font-medium text-white/70 group-hover:text-white/90 transition-colors">{addr}</div>
-        <div className="flex items-center gap-3 mt-1.5">
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusBorder} ${statusText}`}>
-            {statusLabel}
-          </span>
-          <span className="text-[11px] text-white/15">{agent.heartbeats_count || 0} heartbeats</span>
+        <div className="font-mono text-sm font-medium text-white/50 group-hover:text-white/80 transition-colors duration-200 truncate">
+          {addr}
+        </div>
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          <VerificationBadge status={statusLabel} />
+          <span className="text-[10px] text-white/10 font-mono">{agent.heartbeats_count || 0} heartbeats</span>
         </div>
       </div>
-      <div className="text-right">
-        <div className={`text-xl font-bold font-mono ${scoreColor}`}>{score}</div>
-        <div className="text-[9px] text-white/15 uppercase tracking-[1px] mt-0.5">Score</div>
+
+      {/* Score */}
+      <div className="text-right shrink-0">
+        <div className={`text-2xl font-bold font-mono tracking-tight ${scoreColor}
+          group-hover:scale-105 transition-transform duration-300`}
+        >
+          {score}
+        </div>
+        <div className="text-[8px] text-white/10 uppercase tracking-[1.5px] font-semibold mt-0.5">Score</div>
       </div>
     </div>
   )
@@ -363,136 +505,234 @@ function AgentRow({ agent, onClick }) {
 // ─── ─── ─── ─── ─── ─── ─── ───
 
 function AgentDetail({ agent, detail, history, loading, onBack }) {
-  if (loading) return <div className="flex justify-center py-24"><Spinner /></div>
-  if (!detail) return <ErrorBox msg="Failed to load agent details" />
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="h-4 w-24 rounded-md bg-white/[0.03] animate-pulse" />
+        <div className="rounded-3xl bg-white/[0.015] border border-white/[0.06] overflow-hidden">
+          <div className="p-8 border-b border-white/[0.06] space-y-4">
+            <div className="h-6 w-64 rounded-md bg-white/[0.03] animate-pulse" />
+            <div className="h-4 w-40 rounded-md bg-white/[0.02] animate-pulse" />
+            <div className="h-16 w-32 rounded-md bg-white/[0.03] animate-pulse ml-auto" />
+          </div>
+          <div className="p-8 space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 rounded-xl bg-white/[0.015] animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!detail) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-white/20 hover:text-white/50 transition-colors mb-6">
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back to dashboard
+        </button>
+        <ErrorBox msg="Failed to load agent details. The agent may not exist or data is unavailable." />
+      </div>
+    )
+  }
 
   const score = detail.off_chain?.score || 0
   const components = detail.off_chain?.components || {}
   const verification = detail.verification || {}
-  const addr = agent.wallet ? `${agent.wallet.slice(0, 8)}...${agent.wallet.slice(-6)}` : 'Unknown'
+  const addr = agent.wallet
+    ? `${agent.wallet.slice(0, 8)}...${agent.wallet.slice(-6)}`
+    : 'Unknown'
 
   const comps = Object.entries(components).length > 0 ? Object.entries(components) : null
 
   const isVerified = score >= 70
   const scoreColor = isVerified ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'
-  const glowColor = isVerified ? 'rgba(52,211,153,0.04)' : score >= 40 ? 'rgba(251,191,36,0.04)' : 'rgba(248,113,113,0.04)'
+  const glowColor = isVerified
+    ? 'rgba(52,211,153,0.03)'
+    : score >= 40
+      ? 'rgba(251,191,36,0.03)'
+      : 'rgba(248,113,113,0.03)'
 
   return (
-    <div className="max-w-4xl">
-      {/* Back */}
-      <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-white/20 hover:text-white/50 transition-colors mb-6">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    <div className="max-w-4xl mx-auto">
+      {/* Back button */}
+      <button
+        onClick={onBack}
+        className="group inline-flex items-center gap-1.5 text-xs text-white/20 hover:text-white/50 transition-colors mb-6"
+      >
+        <svg className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
         Back to dashboard
       </button>
 
-      {/* Main card */}
-      <div className="rounded-3xl bg-white/[0.02] border border-white/[0.06] overflow-hidden" style={{ boxShadow: `inset 0 0 60px ${glowColor}` }}>
+      {/* Main detail card */}
+      <div
+        className="rounded-3xl bg-white/[0.015] border border-white/[0.06] overflow-hidden
+          hover:border-white/10 transition-all duration-300"
+        style={{ boxShadow: `inset 0 0 80px ${glowColor}` }}
+      >
         {/* Header */}
-        <div className="p-8 border-b border-white/[0.06]">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="font-mono text-base font-medium text-white/80 mb-3">{addr}</div>
-              <div className="flex items-center gap-3">
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
-                  isVerified
-                    ? 'text-emerald-400 border-emerald-400/20 bg-emerald-400/5'
-                    : score >= 40
-                    ? 'text-amber-400 border-amber-400/20 bg-amber-400/5'
-                    : 'text-red-400 border-red-400/20 bg-red-400/5'
-                }`}>
-                  {verification.badge || (isVerified ? 'Verified AI Agent' : 'Not Verified')}
+        <div className="p-6 sm:p-8 border-b border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+            <div className="space-y-3">
+              <div className="font-mono text-sm font-medium text-white/60 truncate max-w-xs sm:max-w-md">{addr}</div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <VerificationBadge
+                  status={isVerified ? 'verified' : score >= 40 ? 'pending' : 'failed'}
+                  score={score}
+                />
+                <span className="text-[10px] text-white/10 font-mono">
+                  {agent.heartbeats_count || 0} heartbeats
                 </span>
-                <span className="text-xs text-white/15">{agent.heartbeats_count || 0} heartbeats</span>
               </div>
             </div>
             <div className="text-right">
-              <div className={`text-7xl font-light font-mono tracking-tight ${scoreColor}`}>
+              <div className={`text-6xl sm:text-7xl font-light font-mono tracking-tight ${scoreColor}`}>
                 {score}
               </div>
-              <div className="text-[10px] text-white/15 uppercase tracking-[2px] mt-1">Agentic Score</div>
+              <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mt-1">Agentic Score</div>
             </div>
           </div>
         </div>
 
         {/* Body */}
-        <div className="p-8 space-y-8">
-          {/* Verdict card */}
+        <div className="p-6 sm:p-8 space-y-8">
+          {/* Verdict */}
           {verification.badge && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 text-center">
-              <div className="text-5xl mb-3">
-                {isVerified ? (
-                  <svg className="w-12 h-12 mx-auto text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
-                  </svg>
-                ) : (
-                  <svg className="w-12 h-12 mx-auto text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/>
-                  </svg>
-                )}
-              </div>
-              <div className="text-xl font-semibold tracking-tight mb-1">
-                {isVerified ? 'Verified AI Agent' : 'Not a Verified AI Agent'}
-              </div>
-              <div className="text-sm text-white/30">{verification.badge}</div>
-              <div className="text-xs text-white/15 mt-3 font-mono">
-                Threshold: {verification.threshold || 70}/100 · Score: {score}/100
+            <div className="relative rounded-2xl bg-white/[0.015] border border-white/[0.06] p-6 sm:p-8 text-center overflow-hidden">
+              <div className={`absolute inset-0 bg-gradient-to-br ${
+                isVerified
+                  ? 'from-emerald-500/5 to-emerald-400/5'
+                  : 'from-red-500/5 to-red-400/5'
+              }`} />
+              <div className="relative">
+                <div className="mb-4">
+                  {isVerified ? (
+                    <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/10 flex items-center justify-center">
+                      <svg className="w-7 h-7 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 mx-auto rounded-2xl bg-red-500/10 border border-red-500/10 flex items-center justify-center">
+                      <svg className="w-7 h-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-lg font-semibold tracking-tight text-white/70 mb-1">
+                  {isVerified ? 'Verified AI Agent' : 'Not a Verified AI Agent'}
+                </h3>
+                <p className="text-sm text-white/25">{verification.badge}</p>
+                <div className="inline-flex items-center gap-3 mt-4 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.04]">
+                  <span className="text-[10px] text-white/20 font-mono">
+                    Threshold: {verification.threshold || 70}/100
+                  </span>
+                  <span className="w-px h-3 bg-white/[0.04]" />
+                  <span className={`text-[10px] font-mono ${scoreColor}`}>
+                    Score: {score}/100
+                  </span>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Components */}
+          {/* Analysis Results */}
           {comps ? (
             <div>
               <SectionTitle>Analysis Results</SectionTitle>
-              <div className="grid md:grid-cols-2 gap-2">
-                {comps.map(([name, data]) => (
-                  <div key={name} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 hover:bg-white/[0.04] transition-all">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-white/40 font-medium">{formatName(name)}</span>
-                      <span className={`text-sm font-mono font-bold ${
-                        data.score >= 70 ? 'text-emerald-400' : data.score >= 40 ? 'text-amber-400' : 'text-red-400'
-                      }`}>{data.score}</span>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {comps.map(([name, data]) => {
+                  const compScore = data.score || 0
+                  const compColor = compScore >= 70
+                    ? 'bg-emerald-500/10 text-emerald-400'
+                    : compScore >= 40
+                      ? 'bg-amber-500/10 text-amber-400'
+                      : 'bg-red-500/10 text-red-400'
+                  const barColor = compScore >= 70
+                    ? 'bg-emerald-400/40'
+                    : compScore >= 40
+                      ? 'bg-amber-400/40'
+                      : 'bg-red-400/40'
+
+                  return (
+                    <div
+                      key={name}
+                      className="group rounded-xl bg-white/[0.015] border border-white/[0.06] p-4
+                        hover:bg-white/[0.03] hover:border-white/10 transition-all duration-200"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-white/30 font-medium">{formatName(name)}</span>
+                        <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${compColor}`}>
+                          {compScore}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/[0.03] overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
+                          style={{ width: `${compScore}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[9px] text-white/15 font-mono">Confidence: {data.confidence || '--'}</span>
+                        {data.details?.data_points && (
+                          <span className="text-[9px] text-white/15 font-mono">{data.details.data_points} samples</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-1000 ${
-                        data.score >= 70 ? 'bg-emerald-400/50' : data.score >= 40 ? 'bg-amber-400/50' : 'bg-red-400/50'
-                      }`} style={{ width: `${data.score}%` }} />
-                    </div>
-                    <div className="flex items-center justify-between mt-2 text-[10px] text-white/20 font-mono">
-                      <span>Confidence: {data.confidence}</span>
-                      {data.details?.data_points && <span>{data.details.data_points} samples</span>}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ) : (
-            <div className="text-xs text-white/20 text-center py-8">Insufficient data for analysis. Submit more heartbeats.</div>
+            <div className="rounded-xl bg-white/[0.015] border border-white/[0.06] p-8 text-center">
+              <svg className="w-6 h-6 mx-auto text-white/[0.06] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p className="text-sm text-white/20 font-medium">Insufficient data for analysis</p>
+              <p className="text-xs text-white/10 mt-1">Submit more heartbeats to generate component scores</p>
+            </div>
           )}
 
-          {/* On-chain */}
+          {/* On-Chain Status */}
           <div>
             <SectionTitle>On-Chain Status</SectionTitle>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Score', value: detail.on_chain?.score ?? '--', color: 'text-white/80' },
-                { label: 'Verified', value: detail.on_chain?.verified ? 'Yes' : 'No',
-                  color: detail.on_chain?.verified ? 'text-emerald-400' : 'text-red-400' },
-                { label: 'Heartbeats', value: agent.heartbeats_count || 0, color: 'text-white/80' },
+                { label: 'Score', value: detail.on_chain?.score ?? '--', color: 'text-white/60' },
+                {
+                  label: 'Verified',
+                  value: detail.on_chain?.verified ? 'Yes' : 'No',
+                  color: detail.on_chain?.verified ? 'text-emerald-400' : 'text-red-400',
+                },
+                { label: 'Heartbeats', value: agent.heartbeats_count || 0, color: 'text-white/60' },
               ].map((item, i) => (
-                <div key={i} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 text-center">
-                  <div className={`text-lg font-mono font-semibold ${item.color}`}>{item.value}</div>
-                  <div className="text-[10px] text-white/20 uppercase tracking-wider mt-1">{item.label}</div>
+                <div
+                  key={i}
+                  className="group rounded-xl bg-white/[0.015] border border-white/[0.06] p-4 text-center
+                    hover:bg-white/[0.03] hover:border-white/10 transition-all duration-200"
+                >
+                  <div className={`text-lg font-mono font-semibold ${item.color} group-hover:scale-105 transition-transform duration-200`}>
+                    {item.value}
+                  </div>
+                  <div className="text-[9px] text-white/15 uppercase tracking-wider mt-1 font-medium">
+                    {item.label}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Chart */}
+          {/* Score History Chart */}
           {history?.history?.length > 0 && (
             <div>
               <SectionTitle>Score History</SectionTitle>
-              <ScoreChart history={history.history} scoreColor={scoreColor} />
+              <ScoreChart history={history.history} wallet={agent.wallet} />
             </div>
           )}
         </div>
@@ -511,65 +751,119 @@ function VerifyView({ result, loading, onVerify }) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
+      {/* Page header */}
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-white/80">Verify Agent</h1>
+        <p className="text-sm text-white/20 mt-1">Check if a wallet address is operated by an AI agent</p>
+      </div>
+
+      {/* Search input */}
       <form onSubmit={handleSubmit} className="flex gap-2">
         <div className="relative flex-1">
-          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/[0.08] pointer-events-none"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
           </svg>
-          <input value={address} onChange={e => setAddress(e.target.value)}
-            placeholder="Enter wallet address..."
-            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-11 pr-4 py-3 text-sm font-mono text-white/80 placeholder-white/15 outline-none focus:border-white/10 transition-all" />
+          <input
+            value={address}
+            onChange={e => setAddress(e.target.value)}
+            placeholder="Enter wallet address (0x...)"
+            className="w-full bg-white/[0.02] border border-white/[0.06] rounded-xl pl-11 pr-4 py-3
+              text-sm font-mono text-white/60 placeholder-white/[0.06]
+              outline-none focus:border-white/10 focus:bg-white/[0.04] focus:ring-1 focus:ring-white/[0.03]
+              transition-all duration-200"
+          />
         </div>
-        <button type="submit" disabled={loading}
-          className="px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold hover:bg-white/90 transition-all disabled:opacity-50 active:scale-[0.97]">
-          {loading ? 'Checking...' : 'Verify'}
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold
+            hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/5
+            active:scale-[0.97] disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-none
+            transition-all duration-200"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+              Checking
+            </span>
+          ) : 'Verify'}
         </button>
       </form>
 
+      {/* Results */}
       {result && (
-        <div className="rounded-3xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+        <div
+          className="rounded-3xl bg-white/[0.015] border border-white/[0.06] overflow-hidden
+            animate-in fade-in slide-in-from-bottom-2 duration-500"
+        >
           {result.error ? (
-            <div className="p-6 text-sm text-red-400/60">{result.error}</div>
+            <div className="p-6 flex items-start gap-3">
+              <svg className="w-5 h-5 text-red-400/50 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-red-400/70">Verification failed</p>
+                <p className="text-xs text-red-400/40 mt-1 font-mono">{result.error}</p>
+              </div>
+            </div>
           ) : (
             <>
-              <div className="p-8 border-b border-white/[0.06]">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="font-mono text-sm font-medium text-white/80 mb-3">{result.wallet}</div>
-                    <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full border ${
-                      result.is_verified_agent ? 'text-emerald-400 border-emerald-400/20 bg-emerald-400/5' :
-                      result.score >= 40 ? 'text-amber-400 border-amber-400/20 bg-amber-400/5' :
-                      'text-red-400 border-red-400/20 bg-red-400/5'
-                    }`}>
-                      {result.is_verified_agent ? 'Verified AI Agent' : result.badge || 'Not Verified'}
-                    </span>
+              <div className="p-6 sm:p-8 border-b border-white/[0.06]">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                  <div className="space-y-3">
+                    <div className="font-mono text-sm font-medium text-white/60 break-all">{result.wallet}</div>
+                    <VerificationBadge
+                      status={result.is_verified_agent
+                        ? 'verified'
+                        : result.score >= 40
+                          ? 'pending'
+                          : 'failed'
+                      }
+                      score={result.score}
+                    />
                   </div>
-                  <div className="text-right">
-                    <div className={`text-6xl font-light font-mono ${
-                      result.is_verified_agent ? 'text-emerald-400' :
-                      result.score >= 40 ? 'text-amber-400' : 'text-red-400'
+                  <div className="text-right shrink-0">
+                    <div className={`text-6xl sm:text-7xl font-light font-mono tracking-tight ${
+                      result.is_verified_agent
+                        ? 'text-emerald-400'
+                        : result.score >= 40
+                          ? 'text-amber-400'
+                          : 'text-red-400'
                     }`}>
                       {result.score}
                     </div>
-                    <div className="text-[10px] text-white/15 uppercase tracking-[2px] mt-1">Score</div>
+                    <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mt-1">Score</div>
                   </div>
                 </div>
               </div>
-              <div className="px-8 py-4 text-xs text-white/20 font-mono flex gap-6">
-                <span>Threshold: {result.threshold || 70}/100</span>
-                <span>Heartbeats: {result.heartbeats_count || 0}</span>
+              <div className="px-6 sm:px-8 py-4 flex flex-wrap gap-6 text-[10px] text-white/15 font-mono bg-white/[0.01]">
+                <span className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white/20" />
+                  Threshold: {result.threshold || 70}/100
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-white/20" />
+                  Heartbeats: {result.heartbeats_count || 0}
+                </span>
               </div>
             </>
           )}
         </div>
       )}
 
+      {/* Empty state */}
       {!result && !loading && (
-        <div className="text-center py-16">
-          <svg className="w-8 h-8 mx-auto text-white/10 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>
-          </svg>
-          <p className="text-sm text-white/20">Enter a wallet address to check AI verification status</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center mb-5">
+            <svg className="w-8 h-8 text-white/[0.06]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-white/20">Enter a wallet address</p>
+          <p className="text-xs text-white/10 mt-1">Paste a wallet address above to check AI verification status</p>
         </div>
       )}
     </div>
@@ -581,86 +875,7 @@ function VerifyView({ result, loading, onVerify }) {
 // ─── ─── ─── ─── ─── ─── ─── ───
 
 function MonitorView() {
-  const [events] = useState([])
-
-  return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-sm font-medium text-white/80">Heartbeat Monitor</h2>
-          <p className="text-xs text-white/20 mt-1">Real-time agent activity on the Mantle network</p>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-emerald-400/70">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          Listening
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-black/40 border border-white/[0.06] p-4 font-mono text-xs">
-        {events.length === 0 ? (
-          <div className="text-center py-16">
-            <svg className="w-6 h-6 mx-auto text-white/10 mb-3 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-            <p className="text-white/15">Waiting for heartbeats...</p>
-            <p className="text-white/10 mt-1">Agents will appear here once they submit data</p>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {events.map((e, i) => (
-              <div key={i} className="flex items-center gap-3 py-1.5 border-b border-white/[0.02]">
-                <span className="text-white/20">{e.time}</span>
-                <span className="text-blue-400/60">{e.wallet}</span>
-                <span className="text-white/40">{e.action}</span>
-                <span className="ml-auto font-semibold" style={{ color: e.score >= 70 ? '#34d399' : e.score >= 40 ? '#fbbf24' : '#f87171' }}>
-                  {e.score}/100
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex gap-6 mt-4 text-[11px] text-white/20">
-        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Verified (score {'>='}70)</span>
-        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Pending (40-69)</span>
-        <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400" /> Human ({'<'}40)</span>
-      </div>
-    </div>
-  )
-}
-
-// ─── ─── ─── ─── ─── ─── ─── ───
-//  SCORE CHART
-// ─── ─── ─── ─── ─── ─── ─── ───
-
-function ScoreChart({ history = [] }) {
-  const data = history.map((r, i) => ({ name: `#${i + 1}`, score: r.score }))
-  const lastScore = data[data.length - 1]?.score || 0
-  const lineColor = lastScore >= 70 ? '#34d399' : lastScore >= 40 ? '#fbbf24' : '#f87171'
-
-  return (
-    <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-5">
-      <ResponsiveContainer width="100%" height={240}>
-        <AreaChart data={data}>
-          <defs>
-            <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={lineColor} stopOpacity={0.2} />
-              <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-          <XAxis dataKey="name" stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.15)', fontSize: 11 }} />
-          <YAxis domain={[0, 100]} stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.15)', fontSize: 11 }} />
-          <Tooltip
-            contentStyle={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, fontSize: 12 }}
-            labelStyle={{ color: 'rgba(255,255,255,0.4)' }}
-          />
-          <Area type="monotone" dataKey="score" stroke={lineColor} strokeWidth={2} fill="url(#scoreGrad)" dot={{ fill: lineColor, r: 3 }} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  )
+  return <LiveMonitor />
 }
 
 // ─── ─── ─── ─── ─── ─── ─── ───
@@ -668,29 +883,53 @@ function ScoreChart({ history = [] }) {
 // ─── ─── ─── ─── ─── ─── ─── ───
 
 function Logo({ small }) {
-  const s = small ? 7 : 8
+  const size = small ? 7 : 8
   return (
-    <div className={`w-${s} h-${s} rounded-lg bg-white/10 flex items-center justify-center`}>
-      <svg width={small ? 14 : 16} height={small ? 14 : 16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+    <div className={`w-${size} h-${size} rounded-xl bg-white/10 border border-white/[0.06] flex items-center justify-center
+      hover:bg-white/15 transition-all duration-200`}>
+      <svg
+        width={small ? 14 : 16}
+        height={small ? 14 : 16}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
       </svg>
     </div>
   )
 }
 
-function Spinner() {
-  return <div className="w-5 h-5 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
+function SectionTitle({ children }) {
+  return (
+    <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mb-4">
+      {children}
+    </div>
+  )
 }
 
 function ErrorBox({ msg }) {
-  return <div className="rounded-xl bg-red-400/5 border border-red-400/10 p-4 text-sm text-red-400/60">{msg}</div>
-}
-
-function SectionTitle({ children }) {
-  return <div className="text-[11px] text-white/20 uppercase tracking-[1.5px] font-semibold mb-4">{children}</div>
+  return (
+    <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-6 flex items-start gap-3">
+      <svg className="w-5 h-5 text-red-400/50 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <p className="text-sm text-red-400/60">{msg}</p>
+    </div>
+  )
 }
 
 function formatName(name) {
-  const map = { time_entropy: 'Time Entropy', response_time: 'Response Time', decision_pattern: 'Decision Pattern', data_access: 'Data Access' }
+  const map = {
+    time_entropy: 'Time Entropy',
+    response_time: 'Response Time',
+    decision_pattern: 'Decision Pattern',
+    data_access: 'Data Access',
+  }
   return map[name] || name
 }

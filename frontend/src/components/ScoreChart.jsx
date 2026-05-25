@@ -1,7 +1,7 @@
 import React from 'react'
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -10,45 +10,45 @@ import {
 } from 'recharts'
 
 /**
- * Historical score chart for an agent.
- * 
+ * ScoreChart — premium area chart for agent score history with glassmorphic container.
+ *
  * Props:
  *   history: array of { score, timestamp }
- *   wallet: string
+ *   wallet: string (optional)
  */
 export default function ScoreChart({ history = [], wallet }) {
   if (!history || history.length === 0) {
     return (
-      <div className="chart-container">
-        <div className="empty-state" style={{ padding: 24 }}>
-          <p style={{ color: 'var(--text-muted)' }}>No score history available yet</p>
+      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-8">
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <svg className="w-8 h-8 text-white/[0.08] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M18 20V10M12 20V4M6 20v-6" />
+          </svg>
+          <p className="text-sm text-white/20 font-medium">No score history available yet</p>
+          <p className="text-xs text-white/10 mt-1">Score data will appear once the agent submits heartbeats</p>
         </div>
       </div>
     )
   }
 
-  // Format data for chart
   const data = history.map((record, i) => ({
     name: `#${i + 1}`,
     score: record.score,
-    time: new Date(record.timestamp * 1000).toLocaleString(),
+    time: record.timestamp
+      ? new Date(record.timestamp * 1000).toLocaleString()
+      : `Check #${i + 1}`,
   }))
 
   const currentScore = data[data.length - 1]?.score || 0
-  const scoreColor = currentScore >= 70 ? '#00ff88' : currentScore >= 40 ? '#ffaa00' : '#ff4444'
+  const scoreColor = currentScore >= 70 ? '#34d399' : currentScore >= 40 ? '#fbbf24' : '#f87171'
+  const scoreGradId = `scoreGrad_${wallet || 'main'}`
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{
-          background: '#1a1a3e',
-          border: '1px solid #2a2a55',
-          padding: '8px 12px',
-          borderRadius: 8,
-          fontSize: 12,
-        }}>
-          <p style={{ color: '#8888aa' }}>{payload[0].payload.time}</p>
-          <p style={{ color: '#00ff88', fontWeight: 700 }}>
+        <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/[0.08] rounded-xl px-4 py-3 shadow-2xl">
+          <p className="text-[11px] text-white/30 font-mono mb-1">{payload[0].payload.time}</p>
+          <p className="text-sm font-bold" style={{ color: scoreColor }}>
             Score: {payload[0].value}/100
           </p>
         </div>
@@ -58,56 +58,48 @@ export default function ScoreChart({ history = [], wallet }) {
   }
 
   return (
-    <div className="chart-container">
-      <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 16 }}>
-        Score History — {shortenAddress(wallet)}
-      </div>
-      <ResponsiveContainer width="100%" height={250}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2a55" />
+    <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 hover:bg-white/[0.03] transition-all duration-300">
+      <ResponsiveContainer width="100%" height={260}>
+        <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <defs>
+            <linearGradient id={scoreGradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={scoreColor} stopOpacity={0.25} />
+              <stop offset="100%" stopColor={scoreColor} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
           <XAxis
             dataKey="name"
-            stroke="#555577"
-            tick={{ fill: '#555577', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            stroke="rgba(255,255,255,0.08)"
+            tick={{ fill: 'rgba(255,255,255,0.15)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
           />
           <YAxis
             domain={[0, 100]}
-            stroke="#555577"
-            tick={{ fill: '#555577', fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            stroke="rgba(255,255,255,0.08)"
+            tick={{ fill: 'rgba(255,255,255,0.15)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace' }}
           />
-          <Tooltip content={<CustomTooltip />} />
-          <Line
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.05)' }} />
+          <Area
             type="monotone"
             dataKey="score"
             stroke={scoreColor}
-            strokeWidth={2}
-            dot={{ fill: scoreColor, r: 4 }}
-            activeDot={{ r: 6 }}
+            strokeWidth={2.5}
+            fill={`url(#${scoreGradId})`}
+            dot={{ fill: scoreColor, r: 3, stroke: 'none' }}
+            activeDot={{ r: 5, fill: scoreColor, stroke: 'rgba(0,0,0,0.5)', strokeWidth: 2 }}
           />
-          {/* Threshold line */}
-          <CartesianGrid
-            horizontalPoints={[70]}
-            stroke="#00ff88"
-            strokeDasharray="5 5"
-            strokeOpacity={0.3}
-          />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        fontSize: 11,
-        color: 'var(--text-muted)',
-        marginTop: 8,
-      }}>
-        <span>Score threshold: 70</span>
-        <span>Current: {currentScore}/100</span>
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
+        <span className="text-[10px] text-white/20 font-mono">Score threshold: 70</span>
+        <span className="text-[10px] font-mono" style={{ color: scoreColor }}>
+          Current: {currentScore}/100
+        </span>
       </div>
     </div>
   )
-}
-
-function shortenAddress(address) {
-  if (!address || address.length < 10) return address
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }

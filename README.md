@@ -66,6 +66,62 @@ Plus a **Machine Learning classifier** (Random Forest + Isolation Forest) as a f
 
 ## 🏗 Architecture
 
+### System Overview
+
+```mermaid
+flowchart LR
+    A[Agent Wallet<br/>ERC-8004] --> B[PoT Oracle<br/>FastAPI]
+    B --> C[Time Entropy<br/>Analyzer]
+    B --> D[Response Time<br/>Analyzer]
+    B --> E[Decision Pattern<br/>Analyzer]
+    B --> F[Data Access<br/>Analyzer]
+    C --> G[Score Aggregator]
+    D --> G
+    E --> G
+    F --> G
+    G --> H[PoTRegistry<br/>Solidity Contract]
+    H --> I[dApps &amp; Consumers]
+
+    style A fill:#050508,stroke:#00d395,color:white
+    style B fill:#050508,stroke:#3b82f6,color:white
+    style H fill:#050508,stroke:#10b981,color:white
+    style I fill:#050508,stroke:#6366f1,color:white
+```
+
+### Data Flow
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant Oracle
+    participant Analyzers
+    participant ML
+    participant Contract
+
+    Agent->>Oracle: Heartbeat (timestamp, action, market_event)
+    Oracle->>Analyzers: Run 4 Dimensional Analysis
+    Analyzers->>ML: Feature extraction
+    ML->>ML: Random Forest Classification
+    ML->>Oracle: Aggregated Score 0-100
+    Oracle->>Contract: submitScore(wallet, score)
+    Contract-->>Agent: isVerifiedAgent = true/false
+```
+
+### Score Threshold Logic
+
+```mermaid
+flowchart TD
+    A[Score 0-100] --> B{≥ 70?}
+    B -->|Yes| C[✅ Verified AI Agent]
+    B -->|No| D{40-69?}
+    D -->|Yes| E[⚠️ Uncertain/Pending]
+    D -->|No| F[❌ Likely Human/Script]
+
+    style C fill:#10b981,color:white
+    style E fill:#f59e0b,color:white
+    style F fill:#ef4444,color:white
+```
+
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                        PROOF-OF-TURING PROTOCOL                            │
@@ -219,6 +275,23 @@ backend/
 
 ### Architecture
 
+```mermaid
+flowchart LR
+    A[Heartbeat Data] --> B[Feature Extractor]
+    B --> C[15 ML Features]
+    C --> D[StandardScaler]
+    D --> E[Random Forest]
+    D --> F[Isolation Forest]
+    E --> G[Voting Classifier]
+    F --> G
+    G --> H[AI/Human/Script<br/>Prediction]
+
+    style A fill:#050508,stroke:#6366f1,color:white
+    style H fill:#10b981,color:white
+```
+
+### Components
+
 | Component | Algorithm | Purpose |
 |-----------|-----------|---------|
 | **Classifier** | Random Forest (200 estimators) | Label: AI / Human / Script |
@@ -270,6 +343,24 @@ React 18 application with Tailwind CSS 4.
 | **Verify** | `/verify` | Wallet verification tool |
 | **Monitor** | `/monitor` | Live heartbeat feed |
 | **Agent Detail** | `/agent/:address` | Full analysis breakdown |
+
+### Component Hierarchy
+
+```mermaid
+flowchart TB
+    App --> Landing
+    App --> Dashboard
+    Dashboard --> StatsGrid
+    Dashboard --> AgentList
+    AgentList --> AgentCard
+    App --> VerifyView
+    App --> MonitorView
+    AgentDetail --> ScoreChart
+    AgentDetail --> VerificationBadge
+
+    style App fill:#050508,stroke:#00d395,color:white
+    style Dashboard fill:#050508,stroke:#3b82f6,color:white
+```
 
 ### Tech
 

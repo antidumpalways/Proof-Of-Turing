@@ -2,8 +2,8 @@ import React from 'react'
 import AgentCard from './AgentCard'
 
 /**
- * List of all registered agents with pagination.
- * 
+ * AgentList — paginated list of registered agents with search.
+ *
  * Props:
  *   agents: array
  *   loading: bool
@@ -33,50 +33,86 @@ export default function AgentList({
     onSearch?.(searchValue)
   }
 
+  // ── Loading State ──
   if (loading) {
     return (
-      <div className="loading">
-        <div className="loading-spinner" />
-        <p>Scanning agents on Mantle...</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <div className="relative w-10 h-10">
+          <div className="absolute inset-0 rounded-full border-2 border-white/[0.04] border-t-white/30 animate-spin" />
+          <div className="absolute inset-1 rounded-full border-2 border-white/[0.02] border-t-emerald-400/30 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
+        </div>
+        <p className="text-sm text-white/20 font-medium">Scanning agents on Mantle...</p>
       </div>
     )
   }
 
+  // ── Error State ──
   if (error) {
-    return <div className="error">⚠️ {error}</div>
+    return (
+      <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-6 flex items-start gap-3">
+        <svg className="w-5 h-5 text-red-400/50 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <div>
+          <p className="text-sm font-medium text-red-400/70">Failed to load agents</p>
+          <p className="text-xs text-red-400/40 mt-1 font-mono">{error}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       {/* Search Bar */}
-      <form className="search-bar" onSubmit={handleSearch}>
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search wallet address (0x...)"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-        />
-        <button type="submit" className="search-btn">
+      <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="relative flex-1">
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/[0.12] pointer-events-none"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
+          </svg>
+          <input
+            type="text"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder="Search wallet address (0x...)"
+            className="w-full bg-white/[0.02] border border-white/[0.06] rounded-xl pl-11 pr-4 py-3
+              text-sm font-mono text-white/70 placeholder-white/[0.08]
+              outline-none focus:border-white/10 focus:bg-white/[0.04] focus:ring-1 focus:ring-white/[0.04]
+              transition-all duration-200"
+          />
+        </div>
+        <button
+          type="submit"
+          className="px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold
+            hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/5
+            active:scale-[0.97] transition-all duration-200"
+        >
           Verify
         </button>
       </form>
 
       {/* Agent List */}
       {agents.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">📡</div>
-          <p>No agents found yet</p>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
-            Agents will appear here once they submit heartbeats
-          </p>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-white/[0.06]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-white/20">No agents registered yet</p>
+          <p className="text-xs text-white/10 mt-1">Agents will appear here once they submit heartbeats</p>
         </div>
       ) : (
         <>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-            Showing {agents.length} of {totalAgents} agents
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-white/15 font-mono">
+              {agents.length} of {totalAgents} agents
+            </span>
           </div>
-          <div className="agent-list">
+
+          <div className="space-y-2">
             {agents.map((agent) => (
               <AgentCard
                 key={agent.wallet}
@@ -88,23 +124,35 @@ export default function AgentList({
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="pagination">
+            <div className="flex items-center justify-center gap-4 pt-2">
               <button
-                className="pagination-btn"
                 disabled={page <= 1}
                 onClick={() => onPageChange(page - 1)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium
+                  text-white/20 hover:text-white/60 hover:bg-white/[0.04]
+                  disabled:opacity-20 disabled:pointer-events-none
+                  transition-all duration-200"
               >
-                ← Previous
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Prev
               </button>
-              <span className="pagination-info">
-                Page {page} of {totalPages}
+              <span className="text-[11px] text-white/15 font-mono">
+                {page} / {totalPages}
               </span>
               <button
-                className="pagination-btn"
                 disabled={page >= totalPages}
                 onClick={() => onPageChange(page + 1)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium
+                  text-white/20 hover:text-white/60 hover:bg-white/[0.04]
+                  disabled:opacity-20 disabled:pointer-events-none
+                  transition-all duration-200"
               >
-                Next →
+                Next
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
               </button>
             </div>
           )}

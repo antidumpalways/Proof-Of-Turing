@@ -2,57 +2,97 @@ import React from 'react'
 import VerificationBadge from './VerificationBadge'
 
 /**
- * Card displaying a single agent's summary.
- * 
+ * AgentCard — a sleek, interactive card for displaying an agent's summary.
+ *
  * Props:
  *   agent: { wallet, agentic_score, status, is_verified, heartbeats_count, last_seen }
  *   onClick: function(agent)
  */
 export default function AgentCard({ agent, onClick }) {
   const score = agent.agentic_score || 0
-  const scoreClass = score >= 70 ? 'score-high' : score >= 40 ? 'score-medium' : 'score-low'
-  const avatar = score >= 70 ? '🤖' : score >= 40 ? '🤔' : '👤'
+  const isVerified = agent.is_verified
 
-  const status = agent.is_verified
-    ? 'verified'
-    : agent.status?.replace('_', ' ') || 'no_data'
+  const statusLabel = isVerified ? 'verified' : score >= 40 ? 'pending' : 'failed'
+  const accentColor = isVerified
+    ? 'from-emerald-500/20 to-emerald-400/5'
+    : score >= 40
+      ? 'from-amber-500/20 to-amber-400/5'
+      : 'from-red-500/20 to-red-400/5'
+  const borderColor = isVerified
+    ? 'border-emerald-500/15 group-hover:border-emerald-500/30'
+    : score >= 40
+      ? 'border-amber-500/15 group-hover:border-amber-500/30'
+      : 'border-red-500/15 group-hover:border-red-500/30'
+
+  const addr = agent.wallet
+    ? `${agent.wallet.slice(0, 8)}...${agent.wallet.slice(-6)}`
+    : 'Unknown'
 
   const timeAgo = agent.last_seen
     ? formatTimeAgo(agent.last_seen)
-    : 'never'
+    : null
 
   return (
-    <div className="agent-card" onClick={() => onClick?.(agent)}>
-      <div className="agent-card-avatar" style={{
-        background: score >= 70 ? 'rgba(0,255,136,0.1)' : 'rgba(255,170,0,0.1)',
-      }}>
-        {avatar}
-      </div>
-      <div className="agent-card-info">
-        <div className="agent-card-address">
-          {shortenAddress(agent.wallet)}
+    <div
+      onClick={() => onClick?.(agent)}
+      className="group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5
+        cursor-pointer overflow-hidden
+        hover:bg-white/[0.04] hover:border-white/10
+        transition-all duration-300 ease-out
+        hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10
+        active:scale-[0.99]"
+    >
+      {/* Gradient accent overlay */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${accentColor} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
+
+      {/* Left indicator bar */}
+      <div className={`absolute left-0 top-3 bottom-3 w-0.5 rounded-full transition-all duration-300 
+        opacity-0 group-hover:opacity-100 scale-y-0 group-hover:scale-y-100 origin-top
+        ${isVerified ? 'bg-emerald-400/60' : score >= 40 ? 'bg-amber-400/60' : 'bg-red-400/60'}`}
+      />
+
+      <div className="relative flex items-center gap-4">
+        {/* Avatar */}
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+          bg-white/[0.03] border ${isVerified ? 'border-emerald-500/15' : score >= 40 ? 'border-amber-500/15' : 'border-red-500/15'}
+          group-hover:scale-105 transition-transform duration-300`}
+        >
+          <span className="text-lg">{isVerified ? '🤖' : score >= 40 ? '🤔' : '👤'}</span>
         </div>
-        <div className="agent-card-meta">
-          <VerificationBadge status={agent.status || 'no_data'} />
-          {' · '}
-          {agent.heartbeats_count || 0} heartbeats · {timeAgo}
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="font-mono text-sm font-medium text-white/60 group-hover:text-white/90 transition-colors duration-200 truncate">
+            {addr}
+          </div>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <VerificationBadge status={statusLabel} />
+            {agent.heartbeats_count > 0 && (
+              <span className="text-[10px] text-white/15 font-mono">
+                {agent.heartbeats_count} beats
+              </span>
+            )}
+            {timeAgo && (
+              <span className="text-[10px] text-white/10 font-mono">· {timeAgo}</span>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="agent-card-score">
-        <div className={`agent-card-score-value ${scoreClass}`}>
-          {score}
-        </div>
-        <div className="agent-card-score-label">
-          Agentic Score
+
+        {/* Score */}
+        <div className="text-right shrink-0">
+          <div className={`text-2xl font-bold font-mono tracking-tight
+            ${isVerified ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'}
+            group-hover:scale-105 transition-transform duration-300`}
+          >
+            {score}
+          </div>
+          <div className="text-[8px] text-white/15 uppercase tracking-[1.5px] font-semibold mt-0.5">
+            Score
+          </div>
         </div>
       </div>
     </div>
   )
-}
-
-function shortenAddress(address) {
-  if (!address || address.length < 10) return address || 'Unknown'
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
 function formatTimeAgo(timestamp) {
