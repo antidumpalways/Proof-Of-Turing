@@ -9,6 +9,7 @@ Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 """
 import time
 import json
+import logging
 import threading
 from contextlib import asynccontextmanager
 from typing import List, Optional, Dict, Any
@@ -37,6 +38,24 @@ from database import (
     save_score, get_latest_score, get_score_history, get_agent_list,
 )
 
+try:
+    from eth_account import Account
+    from eth_account.messages import encode_defunct
+    HAS_ETH_ACCOUNT = True
+except ImportError:
+    Account = None
+    encode_defunct = None
+    HAS_ETH_ACCOUNT = False
+
+# ─── Logging ───
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+log = logging.getLogger("pot-oracle")
+
 # ─── Rate Limiter ───
 
 class RateLimiter:
@@ -58,14 +77,16 @@ rate_limiter = RateLimiter(settings.RATE_LIMIT_PER_SECOND)
 
 def verify_heartbeat_sig(wallet: str, timestamp: int, action: str, signature: str) -> bool:
     if not signature or not settings.VERIFY_SIGNATURE:
-        return True  # skip if not configured
+        return True
+    if not HAS_ETH_ACCOUNT:
+        log.warning("eth_account not installed — skipping signature verification")
+        return True
     try:
-        from eth_account import Account
-        from eth_account.messages import encode_defunct
         msg = encode_defunct(text=f"PoT:{wallet.lower()}:{timestamp}:{action}")
         recovered = Account.recover_message(msg, signature=signature)
         return recovered.lower() == wallet.lower()
-    except Exception:
+    except Exception as e:
+        log.error("Signature verification failed: %s", e)
         return False
 
 # ─── WebSocket Connection Manager ───
@@ -115,16 +136,16 @@ _listener_thread = None
 def _start_listener():
     global _listener_thread
     if not event_listener.contract:
-        print("EventListener: Skipped (contract not configured)")
+        log.warning("EventListener: Skipped (contract not configured)")
         return
     def _on_heartbeat(event):
         args = event.get("args", {})
         wallet = args.get("wallet", "").lower()
-        print(f"EventListener: Heartbeat from {wallet}")
+        log.info("EventListener: Heartbeat from %s", wallet)
     def _on_registration(event):
         args = event.get("args", {})
         wallet = args.get("wallet", "").lower()
-        print(f"EventListener: Agent registered {wallet}")
+        log.info("EventListener: Agent registered %s", wallet)
     def _run():
         event_listener.listen_forever(
             on_heartbeat=_on_heartbeat,
@@ -133,19 +154,19 @@ def _start_listener():
         )
     _listener_thread = threading.Thread(target=_run, daemon=True)
     _listener_thread.start()
-    print("EventListener: Started background listener")
+    log.info("EventListener: Started background listener")
 
 # ─── Lifecycle ───
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    print("Database: Initialized")
+    log.info("Database: Initialized")
     _start_listener()
     yield
     if event_listener:
         event_listener.stop()
-        print("EventListener: Stopped")
+        log.info("EventListener: Stopped")
 
 # ─── Application Setup ───
 
@@ -247,6 +268,11 @@ def _run_analysis(wallet: str) -> dict:
     return result
 
 
+def _safe_score_val(score: dict, key: str, default):
+    if isinstance(score, dict):
+        return score.get(key, default)
+    return default
+
 def _format_agent_summary(wallet: str, score: dict = None) -> dict:
     """Build an AgentSummary dict for a wallet."""
     if not score:
@@ -255,8 +281,8 @@ def _format_agent_summary(wallet: str, score: dict = None) -> dict:
     beats = get_heartbeats(wallet)
     last_seen = beats[-1].get("timestamp", 0) if beats else 0
 
-    s = score.get("overall_score", 0) if isinstance(score, dict) else (score.get("overall_score", 0) if score else 0)
-    st = score.get("status", "no_data") if isinstance(score, dict) else (score.get("status", "no_data") if score else "no_data")
+    s = _safe_score_val(score, "overall_score", 0)
+    st = _safe_score_val(score, "status", "no_data")
     verified = (s >= 70 and st == "verified_agent") if st != "no_data" else False
 
     return {
@@ -303,11 +329,11 @@ async def submit_heartbeat(data: HeartbeatData):
         try:
             tx_hash = contract.submit_score(wallet, result["overall_score"])
         except Exception as e:
-            print(f"Contract submission error: {e}")
+            log.error("Contract submission error: %s", e)
 
     # Broadcast via WebSocket
     import asyncio
-    asyncio.ensure_future(ws_manager.broadcast({
+    asyncio.create_task(ws_manager.broadcast({
         "type": "heartbeat",
         "wallet": wallet,
         "score": result.get("overall_score", 0),

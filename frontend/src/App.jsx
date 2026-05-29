@@ -6,6 +6,7 @@ import ScoreChart from './components/ScoreChart'
 import VerificationBadge from './components/VerificationBadge'
 import LiveMonitor from './components/LiveMonitor'
 import Sidebar from './components/Sidebar'
+import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider, useToast } from './components/Toast'
 import Leaderboard from './components/Leaderboard'
 import Analytics from './components/Analytics'
@@ -17,7 +18,9 @@ export default function App() {
   if (page === 'landing') return <Landing onEnter={() => setPage('app')} />
   return (
     <ToastProvider>
-      <DashboardApp onHome={() => setPage('landing')} />
+      <ErrorBoundary>
+        <DashboardApp onHome={() => setPage('landing')} />
+      </ErrorBoundary>
     </ToastProvider>
   )
 }
@@ -140,6 +143,8 @@ function Landing({ onEnter }) {
 }
 
 function DashboardApp({ onHome }) {
+  const addToast = useToast()
+
   const {
     agents, totalAgents, loading, error, page, totalPages,
     oracleStatus, getAgentScore, verifyAgent, getScoreHistory,
@@ -167,6 +172,7 @@ function DashboardApp({ onHome }) {
     setSelected(agent)
     setDetailLoading(true)
     setVerifyResult(null)
+    addToast('Loading agent details...', 'info')
     try {
       const [d, h] = await Promise.all([
         getAgentScore(agent.wallet),
@@ -176,26 +182,34 @@ function DashboardApp({ onHome }) {
       setHistory(h)
     } catch (e) {
       setDetail({ error: e.message })
+      addToast(`Failed to load agent: ${e.message}`, 'error', 5000)
     } finally {
       setDetailLoading(false)
     }
-  }, [getAgentScore, getScoreHistory])
+  }, [getAgentScore, getScoreHistory, addToast])
 
   const handleVerify = useCallback(async (address) => {
     if (!address?.length) return
     setVerifyLoading(true)
     setVerifyResult(null)
     setSelected(null)
+    addToast('Verifying agent...', 'info')
     try {
       const res = await verifyAgent(address)
       setVerifyResult(res)
       setNav('verify')
+      if (res.is_verified_agent) {
+        addToast('Agent verified successfully!', 'success')
+      } else {
+        addToast('Agent verification completed', 'warning')
+      }
     } catch (e) {
       setVerifyResult({ error: e.message })
+      addToast(`Verification failed: ${e.message}`, 'error', 5000)
     } finally {
       setVerifyLoading(false)
     }
-  }, [verifyAgent])
+  }, [verifyAgent, addToast])
 
   const handleBack = useCallback(() => {
     setSelected(null); setDetail(null); setHistory(null); setVerifyResult(null)
@@ -207,6 +221,15 @@ function DashboardApp({ onHome }) {
   }, [handleBack])
 
   const isOnline = oracleStatus?.status === 'running'
+
+  // Toast when oracle goes offline
+  const prevOnline = React.useRef(null)
+  React.useEffect(() => {
+    if (prevOnline.current !== null && prevOnline.current !== isOnline) {
+      addToast(isOnline ? 'Oracle connected' : 'Oracle disconnected', isOnline ? 'success' : 'error')
+    }
+    prevOnline.current = isOnline
+  }, [isOnline, addToast])
 
   const renderContent = () => {
     if (selected) {
@@ -580,7 +603,8 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
 
 function VerifyView({ result, loading, onVerify }) {
   const [address, setAddress] = useState('')
-  const handleSubmit = (e) => { e.preventDefault(); onVerify(address) }
+  const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(address)
+  const handleSubmit = (e) => { e.preventDefault(); if (isValidAddress) onVerify(address) }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -598,12 +622,19 @@ function VerifyView({ result, loading, onVerify }) {
             value={address}
             onChange={e => setAddress(e.target.value)}
             placeholder="Enter wallet address (0x...)"
-            className="w-full bg-white/[0.02] border border-white/[0.06] rounded-xl pl-11 pr-4 py-3 text-sm font-mono text-white/60 placeholder-white/[0.06] outline-none focus:border-white/10 focus:bg-white/[0.04] focus:ring-1 focus:ring-white/[0.03] transition-all duration-200"
+            className={`w-full bg-white/[0.02] border rounded-xl pl-11 pr-4 py-3 text-sm font-mono text-white/60 placeholder-white/[0.06] outline-none focus:ring-1 transition-all duration-200 ${
+              address && !isValidAddress
+                ? 'border-red-500/30 focus:border-red-500/50 focus:ring-red-500/10'
+                : 'border-white/[0.06] focus:border-white/10 focus:ring-white/[0.03] focus:bg-white/[0.04]'
+            }`}
           />
+          {address && !isValidAddress && (
+            <p className="absolute -bottom-5 left-4 text-[10px] text-red-400/50 font-mono">Invalid wallet format (expected 0x... 42 chars)</p>
+          )}
         </div>
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !isValidAddress}
           className="px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold
             hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/5
             active:scale-[0.97] disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-none
@@ -686,9 +717,8 @@ function MonitorView() {
 }
 
 function Logo({ small }) {
-  const size = small ? 7 : 8
   return (
-    <div className={`w-${size} h-${size} rounded-xl bg-white/10 border border-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-all duration-200`}>
+    <div style={{ width: small ? 28 : 32, height: small ? 28 : 32 }} className="rounded-xl bg-white/10 border border-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-all duration-200">
       <svg width={small ? 14 : 16} height={small ? 14 : 16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
       </svg>

@@ -6,20 +6,23 @@ const API_BASE = '/api/v1'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
+const PAGE_SIZE = 20
+
 export default function Leaderboard({ onAgentClick }) {
-  const [agents, setAgents] = useState([])
+  const [allAgents, setAllAgents] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
       const res = await axios.get(`${API_BASE}/agents`, { params: { page: 1, limit: 100 } })
       const list = (res.data.agents || []).sort((a, b) => (b.agentic_score || 0) - (a.agentic_score || 0))
-      setAgents(list)
+      setAllAgents(list)
     } catch {
-      setAgents([])
+      setAllAgents([])
     } finally {
       setLoading(false)
     }
@@ -27,7 +30,10 @@ export default function Leaderboard({ onAgentClick }) {
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  const filtered = agents.filter(a => {
+  // Reset page when filter or search changes
+  useEffect(() => { setPage(1) }, [filter, search])
+
+  const filtered = allAgents.filter(a => {
     if (filter === 'verified') return a.is_verified
     if (filter === 'pending') return !a.is_verified && (a.agentic_score || 0) >= 40
     if (filter === 'failed') return (a.agentic_score || 0) < 40
@@ -36,6 +42,9 @@ export default function Leaderboard({ onAgentClick }) {
     if (!search) return true
     return a.wallet?.toLowerCase().includes(search.toLowerCase())
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -91,10 +100,10 @@ export default function Leaderboard({ onAgentClick }) {
         </div>
       ) : (
         <div className="space-y-1.5">
-          {filtered.map((agent, i) => {
+          {paged.map((agent, i) => {
             const score = agent.agentic_score || 0
-            const rank = i + 1
-            const isMedal = rank <= 3 && filter === 'all'
+            const globalRank = filtered.indexOf(agent) + 1
+            const isMedal = globalRank <= 3 && filter === 'all'
             return (
               <div
                 key={agent.wallet}
@@ -103,9 +112,9 @@ export default function Leaderboard({ onAgentClick }) {
               >
                 <div className="w-8 text-center shrink-0">
                   {isMedal ? (
-                    <span className="text-lg">{MEDALS[rank - 1]}</span>
+                    <span className="text-lg">{MEDALS[globalRank - 1]}</span>
                   ) : (
-                    <span className="text-xs font-mono text-white/10 font-semibold">#{rank}</span>
+                    <span className="text-xs font-mono text-white/10 font-semibold">#{globalRank}</span>
                   )}
                 </div>
                 <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center shrink-0">
@@ -132,6 +141,27 @@ export default function Leaderboard({ onAgentClick }) {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-3 py-1.5 rounded-lg text-[11px] font-medium bg-white/[0.03] border border-white/[0.06] text-white/30 hover:text-white/60 hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            Prev
+          </button>
+          <span className="text-[11px] text-white/20 font-mono px-3">{page} / {totalPages}</span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-3 py-1.5 rounded-lg text-[11px] font-medium bg-white/[0.03] border border-white/[0.06] text-white/30 hover:text-white/60 hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

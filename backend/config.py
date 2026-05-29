@@ -22,7 +22,7 @@ class Settings:
     MANTLE_RPC_URL: str = os.getenv(
         "MANTLE_RPC_URL", "https://rpc.testnet.mantle.xyz"
     )
-    MANTLE_CHAIN_ID: int = int(os.getenv("MANTLE_CHAIN_ID", "5001"))
+    MANTLE_CHAIN_ID: int = int(os.getenv("MANTLE_CHAIN_ID", "5003"))
 
     # Smart Contract
     POT_REGISTRY_ADDRESS: str = os.getenv(

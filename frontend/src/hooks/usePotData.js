@@ -23,23 +23,23 @@ export function usePotData() {
     }
   }, [])
 
-  const fetchAgents = useCallback(async (p = page) => {
+  const fetchAgents = useCallback(async (p) => {
     setLoading(true)
     setError(null)
     try {
       const res = await axios.get(`${API_BASE}/agents`, {
-        params: { page: p, limit: pageSize },
+        params: { page: p ?? page, limit: pageSize },
       })
       setAgents(res.data.agents || [])
       setTotalAgents(res.data.total || 0)
-      setPage(p)
+      setPage(p ?? page)
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'Failed to fetch agents')
       setAgents([])
     } finally {
       setLoading(false)
     }
-  }, [pageSize])
+  }, [page, pageSize])
 
   const getAgentScore = useCallback(async (wallet) => {
     const res = await axios.get(`${API_BASE}/score/${wallet}`)

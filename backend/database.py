@@ -139,7 +139,11 @@ def get_agent(wallet: str):
 def get_all_wallets() -> list:
     conn = get_conn()
     rows = conn.execute(
-        "SELECT DISTINCT wallet FROM heartbeats ORDER BY wallet"
+        """SELECT DISTINCT wallet FROM (
+            SELECT wallet FROM heartbeats
+            UNION
+            SELECT wallet FROM agents
+        ) ORDER BY wallet"""
     ).fetchall()
     conn.close()
     return [r["wallet"] for r in rows]
@@ -185,24 +189,55 @@ def get_agent_list(page: int = 1, limit: int = 20) -> tuple:
     conn = get_conn()
     offset = (page - 1) * limit
 
-    wallets = get_all_wallets()
-    total = len(wallets)
-    page_wallets = wallets[offset : offset + limit]
+    # Single JOIN query: agents + latest score + heartbeat stats
+    rows = conn.execute(
+        """SELECT
+            COALESCE(hb.wallet, a.wallet) as wallet,
+            s.overall_score,
+            s.status,
+            hb.beat_count,
+            hb.last_seen
+        FROM (
+            SELECT wallet FROM heartbeats
+            UNION
+            SELECT wallet FROM agents
+        ) all_wallets
+        LEFT JOIN (
+            SELECT wallet, COUNT(*) as beat_count, MAX(timestamp) as last_seen
+            FROM heartbeats GROUP BY wallet
+        ) hb ON hb.wallet = all_wallets.wallet
+        LEFT JOIN (
+            SELECT wallet, overall_score, status
+            FROM scores
+            WHERE id IN (SELECT MAX(id) FROM scores GROUP BY wallet)
+        ) s ON s.wallet = all_wallets.wallet
+        ORDER BY all_wallets.wallet
+        LIMIT ? OFFSET ?""",
+        (limit, offset),
+    ).fetchall()
+
+    # Total count (separate lightweight query)
+    count_row = conn.execute(
+        """SELECT COUNT(*) as cnt FROM (
+            SELECT wallet FROM heartbeats
+            UNION
+            SELECT wallet FROM agents
+        )""",
+    ).fetchone()
+    total = count_row["cnt"] if count_row else 0
 
     agents = []
-    for w in page_wallets:
-        score = get_latest_score(w)
-        beat_count = count_heartbeats(w)
-        beats = get_heartbeats(w)
-        last_seen = beats[-1].get("timestamp", 0) if beats else 0
+    for r in rows:
+        score = r["overall_score"] or 0
+        st = r["status"] or "no_data"
         agents.append(
             {
-                "wallet": w,
-                "agentic_score": score["overall_score"] if score else 0,
-                "status": score["status"] if score else "no_data",
-                "is_verified": (score["overall_score"] >= 70 and score["status"] == "verified_agent") if score else False,
-                "heartbeats_count": beat_count,
-                "last_seen": last_seen,
+                "wallet": r["wallet"],
+                "agentic_score": score,
+                "status": st,
+                "is_verified": (score >= 70 and st == "verified_agent"),
+                "heartbeats_count": r["beat_count"] or 0,
+                "last_seen": r["last_seen"] or 0,
             }
         )
 

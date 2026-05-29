@@ -11,10 +11,11 @@ export default function LiveMonitor({ onVerify }) {
   const prevWalletsRef = useRef(new Set())
   const wsRef = useRef(null)
 
-  // WebSocket connection
+  // WebSocket connection with exponential backoff
   useEffect(() => {
     let ws
     let reconnectTimer
+    let retryCount = 0
 
     function connect() {
       try {
@@ -23,7 +24,7 @@ export default function LiveMonitor({ onVerify }) {
 
         ws.onopen = () => {
           setWsConnected(true)
-          console.log('LiveMonitor: WebSocket connected')
+          retryCount = 0
         }
 
         ws.onmessage = (msg) => {
@@ -43,14 +44,18 @@ export default function LiveMonitor({ onVerify }) {
         ws.onclose = () => {
           setWsConnected(false)
           wsRef.current = null
-          reconnectTimer = setTimeout(connect, 3000)
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 30000)
+          retryCount++
+          reconnectTimer = setTimeout(connect, delay)
         }
 
         ws.onerror = () => {
           ws?.close()
         }
       } catch {
-        reconnectTimer = setTimeout(connect, 3000)
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 30000)
+        retryCount++
+        reconnectTimer = setTimeout(connect, delay)
       }
     }
 
