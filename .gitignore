@@ -8,3 +8,4 @@ backend/**/__pycache__/
 .pytest_cache/
 artifacts/
 cache/
+*.db
