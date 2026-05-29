@@ -56,10 +56,10 @@ function ToastItem({ toast, onRemove }) {
       }`}
     >
       <span className={`${t.color} mt-0.5 shrink-0`}>{ICONS[t.icon]}</span>
-      <p className="text-xs text-white/60 leading-relaxed flex-1">{toast.message}</p>
+      <p className="text-xs text-[var(--text-primary)] leading-relaxed flex-1">{toast.message}</p>
       <button
         onClick={() => { setExiting(true); setTimeout(() => onRemove(toast.id), 300) }}
-        className="text-white/10 hover:text-white/40 transition-colors"
+        className="text-[var(--text-faint)] hover:text-[var(--text-secondary)] transition-colors"
       >
         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6L6 18M6 6l12 12" />

@@ -100,16 +100,16 @@ function CodeBlock({ code }) {
   }
 
   return (
-    <div className="group relative rounded-xl bg-zinc-900/50 border border-white/[0.06] overflow-hidden">
+    <div className="group relative rounded-xl bg-zinc-900/50 border border-[var(--border)] overflow-hidden">
       <div className="absolute top-3 right-3 z-10">
         <button
           onClick={handleCopy}
-          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-white/[0.04] border border-white/[0.06] text-white/20 hover:text-white/60 hover:bg-white/[0.08] transition-all duration-200 opacity-0 group-hover:opacity-100"
+          className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-[var(--bg-card-hover)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white/[0.08] transition-all duration-200 opacity-0 group-hover:opacity-100"
         >
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      <pre className="p-4 overflow-x-auto text-xs font-mono text-white/30 leading-relaxed">
+      <pre className="p-4 overflow-x-auto text-xs font-mono text-[var(--text-secondary)] leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>
@@ -122,12 +122,12 @@ export default function Onboarding() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-white/80">Agent Onboarding</h1>
-        <p className="text-sm text-white/20 mt-1">Get started with Proof-of-Turing in minutes</p>
+        <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Agent Onboarding</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Get started with Proof-of-Turing in minutes</p>
       </div>
 
       {/* Tab toggle */}
-      <div className="flex items-center gap-2 p-1 rounded-xl bg-white/[0.02] border border-white/[0.06] w-fit">
+      <div className="flex items-center gap-2 p-1 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] w-fit">
         {[
           { id: 'api', label: 'NPM Module' },
           { id: 'cli', label: 'CLI Tool' },
@@ -136,7 +136,7 @@ export default function Onboarding() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-              tab === t.id ? 'bg-white/10 text-white shadow-sm' : 'text-white/20 hover:text-white/40'
+              tab === t.id ? 'bg-white/10 text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
             }`}
           >
             {t.label}
@@ -149,16 +149,16 @@ export default function Onboarding() {
         {(tab === 'api' ? STEPS : CLI_STEPS).map((step, i) => (
           <div
             key={i}
-            className="group rounded-2xl bg-white/[0.015] border border-white/[0.06] p-6 hover:bg-white/[0.03] hover:border-white/10 transition-all duration-200"
+            className="group rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200"
           >
             <div className="flex items-start gap-5">
-              <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center shrink-0 group-hover:border-emerald-500/20 transition-colors">
-                <span className="text-[10px] font-mono font-semibold text-white/20">{step.num}</span>
+              <div className="w-10 h-10 rounded-xl bg-[var(--bg-card-hover)] border border-[var(--border)] flex items-center justify-center shrink-0 group-hover:border-emerald-500/20 transition-colors">
+                <span className="text-[10px] font-mono font-semibold text-[var(--text-muted)]">{step.num}</span>
               </div>
               <div className="flex-1 min-w-0 space-y-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-white/60 group-hover:text-white/80 transition-colors">{step.title}</h3>
-                  <p className="text-xs text-white/20 mt-1">{step.desc}</p>
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--text-primary)] transition-colors">{step.title}</h3>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{step.desc}</p>
                 </div>
                 <CodeBlock code={step.code} />
               </div>

@@ -6,6 +6,51 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
+/* ─── Theme Variables ─── */
+
+:root,
+html.light {
+  --bg-body: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f9fafb;
+  --bg-elevated: #f9fafb;
+  --bg-inset: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --text-faint: #d1d5db;
+  --text-on-accent: #000000;
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+  --sidebar-bg: rgba(255, 255, 255, 0.95);
+  --sidebar-border: #e5e7eb;
+  --overlay: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.08);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.15);
+  --invert-icon: none;
+}
+
+html.dark {
+  --bg-body: #050508;
+  --bg-card: rgba(255, 255, 255, 0.015);
+  --bg-card-hover: rgba(255, 255, 255, 0.03);
+  --bg-elevated: rgba(255, 255, 255, 0.02);
+  --bg-inset: rgba(255, 255, 255, 0.04);
+  --text-primary: rgba(255, 255, 255, 0.8);
+  --text-secondary: rgba(255, 255, 255, 0.4);
+  --text-muted: rgba(255, 255, 255, 0.15);
+  --text-faint: rgba(255, 255, 255, 0.08);
+  --text-on-accent: #000000;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-bg: rgba(5, 5, 8, 0.8);
+  --sidebar-border: rgba(255, 255, 255, 0.04);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.04);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.08);
+  --invert-icon: brightness(0) invert(1);
+}
+
 /* Smooth scrollbar for the whole app */
 html {
   scroll-behavior: smooth;
@@ -22,12 +67,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Gradient radial utility */
@@ -53,6 +98,6 @@ html {
 
 /* Selection color */
 ::selection {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--text-primary);
 }

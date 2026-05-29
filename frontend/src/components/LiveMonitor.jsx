@@ -115,8 +115,8 @@ export default function LiveMonitor({ onVerify }) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-white/80">Live Heartbeat Monitor</h2>
-          <p className="text-xs text-white/20 mt-1">Real-time agent activity on the Mantle network</p>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Live Heartbeat Monitor</h2>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Real-time agent activity on the Mantle network</p>
         </div>
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-medium ${
           wsConnected
@@ -134,12 +134,12 @@ export default function LiveMonitor({ onVerify }) {
       {/* Feed */}
       <div
         ref={feedRef}
-        className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden
+        className="rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] overflow-hidden
           backdrop-blur-xl max-h-[480px] overflow-y-auto
           shadow-inner shadow-black/5
           [&::-webkit-scrollbar]:w-1
           [&::-webkit-scrollbar-track]:bg-transparent
-          [&::-webkit-scrollbar-thumb]:bg-white/[0.04]
+          [&::-webkit-scrollbar-thumb]:bg-[var(--bg-card-hover)]
           [&::-webkit-scrollbar-thumb]:rounded-full"
       >
         {events.length === 0 ? (
@@ -153,8 +153,8 @@ export default function LiveMonitor({ onVerify }) {
                 </svg>
               </div>
             </div>
-            <p className="text-sm font-medium text-white/20">Waiting for heartbeats...</p>
-            <p className="text-xs text-white/10 mt-1">Connect the backend oracle to see live events</p>
+            <p className="text-sm font-medium text-[var(--text-muted)]">Waiting for heartbeats...</p>
+            <p className="text-xs text-[var(--text-faint)] mt-1">Connect the backend oracle to see live events</p>
           </div>
         ) : (
           <div className="p-1">
@@ -173,9 +173,9 @@ export default function LiveMonitor({ onVerify }) {
               return (
                 <div
                   key={i}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-white/[0.02] transition-all duration-150 group"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-[var(--bg-elevated)] transition-all duration-150 group"
                 >
-                  <span className="text-[10px] text-white/[0.12] font-mono w-16 shrink-0">
+                  <span className="text-[10px] text-[var(--text-muted)] font-mono w-16 shrink-0">
                     {event.timestamp
                       ? new Date(event.timestamp * 1000).toLocaleTimeString()
                       : '--:--:--'}
@@ -183,7 +183,7 @@ export default function LiveMonitor({ onVerify }) {
                   <span className="text-xs font-mono text-blue-400/50 group-hover:text-blue-400/80 transition-colors truncate">
                     {shortenAddress(event.wallet)}
                   </span>
-                  <span className="text-[10px] text-white/20 truncate flex-1">{event.action}</span>
+                  <span className="text-[10px] text-[var(--text-muted)] truncate flex-1">{event.action}</span>
                   <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded-md ${scoreColor} ${scoreBg}`}>
                     {event.score}/100
                   </span>
@@ -195,7 +195,7 @@ export default function LiveMonitor({ onVerify }) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-5 text-[10px] text-white/20 font-mono">
+      <div className="flex items-center gap-5 text-[10px] text-[var(--text-muted)] font-mono">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-400" />
           Verified (&ge;70)

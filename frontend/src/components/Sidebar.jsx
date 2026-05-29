@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTheme } from './ThemeContext'
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
@@ -46,6 +47,7 @@ const ICONS = {
 
 export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { theme, toggleTheme } = useTheme()
 
   const handleNav = (id) => {
     onNavChange(id)
@@ -57,7 +59,7 @@ export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-[var(--overlay)] backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -65,21 +67,21 @@ export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-3 left-3 z-50 w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center lg:hidden hover:bg-white/[0.06] transition-all"
+        className="fixed top-3 left-3 z-50 w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-white/[0.06] flex items-center justify-center lg:hidden hover:bg-white/[0.06] transition-all"
       >
-        <svg className="w-4 h-4 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg className="w-4 h-4 text-[var(--text-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           {mobileOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <><path d="M3 12h18" /><path d="M3 6h18" /><path d="M3 18h18" /></>}
         </svg>
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-60 bg-[#050508]/80 backdrop-blur-2xl border-r border-white/[0.04] flex flex-col transition-transform duration-300 ease-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-40 h-full w-60 bg-[var(--sidebar-bg)] backdrop-blur-2xl border-r border-[var(--sidebar-border)] flex flex-col transition-transform duration-300 ease-out lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
-        <div className="p-5 border-b border-white/[0.04]">
+        <div className="p-5 border-b border-[var(--sidebar-border)]">
           <button onClick={onHome} className="flex items-center gap-3 hover:opacity-70 transition-all">
             <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/[0.06] flex items-center justify-center">
               <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -87,8 +89,8 @@ export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }
               </svg>
             </div>
             <div>
-              <div className="text-sm font-semibold text-white/60">Proof of Turing</div>
-              <div className="text-[9px] text-white/10 font-mono">Inverse Captcha</div>
+              <div className="text-sm font-semibold text-[var(--text-primary)]">Proof of Turing</div>
+              <div className="text-[9px] text-[var(--text-faint)] font-mono">Inverse Captcha</div>
             </div>
           </button>
         </div>
@@ -104,10 +106,10 @@ export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
                   active
                     ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-white/20 hover:text-white/50 hover:bg-white/[0.03]'
+                    : 'text-[var(--text-muted)] hover:text-white/50 hover:bg-[var(--bg-card)]'
                 }`}
               >
-                <span className={`${active ? 'text-emerald-400' : 'text-white/20 group-hover:text-white/40'} transition-colors`}>
+                <span className={`${active ? 'text-emerald-400' : 'text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]'} transition-colors`}>
                   {ICONS[n.icon]}
                 </span>
                 {n.label}
@@ -117,9 +119,30 @@ export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }
           })}
         </nav>
 
+        {/* Theme Toggle */}
+        <div className="px-4 py-2 border-t border-[var(--sidebar-border)]">
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:text-white/50 hover:bg-[var(--bg-card)] transition-all duration-200 group"
+          >
+            <span className="w-[18px] h-[18px] flex items-center justify-center">
+              {theme === 'dark' ? (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </span>
+            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </button>
+        </div>
+
         {/* Oracle Status */}
-        <div className="p-4 border-t border-white/[0.04]">
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.02]">
+        <div className="p-4 border-t border-[var(--sidebar-border)]">
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)]">
             <span className="relative flex w-2 h-2 shrink-0">
               {oracleOnline && (
                 <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />
@@ -127,10 +150,10 @@ export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }
               <span className={`relative rounded-full w-2 h-2 ${oracleOnline ? 'bg-emerald-400' : 'bg-red-400'}`} />
             </span>
             <div className="min-w-0">
-              <div className="text-[10px] font-medium text-white/30 truncate">
+              <div className="text-[10px] font-medium text-[var(--text-secondary)] truncate">
                 {oracleOnline ? 'Oracle Online' : 'Disconnected'}
               </div>
-              <div className="text-[8px] text-white/10 font-mono">Mantle Network</div>
+              <div className="text-[8px] text-[var(--text-faint)] font-mono">Mantle Network</div>
             </div>
           </div>
         </div>

@@ -19,13 +19,13 @@ import {
 export default function ScoreChart({ history = [], wallet }) {
   if (!history || history.length === 0) {
     return (
-      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-8">
+      <div className="rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] p-8">
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <svg className="w-8 h-8 text-white/[0.08] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg className="w-8 h-8 text-[var(--text-faint)] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M18 20V10M12 20V4M6 20v-6" />
           </svg>
-          <p className="text-sm text-white/20 font-medium">No score history available yet</p>
-          <p className="text-xs text-white/10 mt-1">Score data will appear once the agent submits heartbeats</p>
+          <p className="text-sm text-[var(--text-muted)] font-medium">No score history available yet</p>
+          <p className="text-xs text-[var(--text-faint)] mt-1">Score data will appear once the agent submits heartbeats</p>
         </div>
       </div>
     )
@@ -47,7 +47,7 @@ export default function ScoreChart({ history = [], wallet }) {
     if (active && payload && payload.length) {
       return (
         <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/[0.08] rounded-xl px-4 py-3 shadow-2xl">
-          <p className="text-[11px] text-white/30 font-mono mb-1">{payload[0].payload.time}</p>
+          <p className="text-[11px] text-[var(--text-secondary)] font-mono mb-1">{payload[0].payload.time}</p>
           <p className="text-sm font-bold" style={{ color: scoreColor }}>
             Score: {payload[0].value}/100
           </p>
@@ -58,7 +58,7 @@ export default function ScoreChart({ history = [], wallet }) {
   }
 
   return (
-    <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5 hover:bg-white/[0.03] transition-all duration-300">
+    <div className="rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] p-5 hover:bg-[var(--bg-card-hover)] transition-all duration-300">
       <ResponsiveContainer width="100%" height={260}>
         <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <defs>
@@ -94,8 +94,8 @@ export default function ScoreChart({ history = [], wallet }) {
           />
         </AreaChart>
       </ResponsiveContainer>
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
-        <span className="text-[10px] text-white/20 font-mono">Score threshold: 70</span>
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--sidebar-border)]">
+        <span className="text-[10px] text-[var(--text-muted)] font-mono">Score threshold: 70</span>
         <span className="text-[10px] font-mono" style={{ color: scoreColor }}>
           Current: {currentScore}/100
         </span>

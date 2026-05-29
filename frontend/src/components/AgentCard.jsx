@@ -35,9 +35,9 @@ export default function AgentCard({ agent, onClick }) {
   return (
     <div
       onClick={() => onClick?.(agent)}
-      className="group relative rounded-2xl bg-white/[0.02] border border-white/[0.06] p-5
+      className="group relative rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] p-5
         cursor-pointer overflow-hidden
-        hover:bg-white/[0.04] hover:border-white/10
+        hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)]
         transition-all duration-300 ease-out
         hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10
         active:scale-[0.99]"
@@ -54,7 +54,7 @@ export default function AgentCard({ agent, onClick }) {
       <div className="relative flex items-center gap-4">
         {/* Avatar */}
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-          bg-white/[0.03] border ${isVerified ? 'border-emerald-500/15' : score >= 40 ? 'border-amber-500/15' : 'border-red-500/15'}
+          bg-[var(--bg-card-hover)] border ${isVerified ? 'border-emerald-500/15' : score >= 40 ? 'border-amber-500/15' : 'border-red-500/15'}
           group-hover:scale-105 transition-transform duration-300`}
         >
           <span className="text-lg">{isVerified ? '🤖' : score >= 40 ? '🤔' : '👤'}</span>
@@ -62,18 +62,18 @@ export default function AgentCard({ agent, onClick }) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="font-mono text-sm font-medium text-white/60 group-hover:text-white/90 transition-colors duration-200 truncate">
+          <div className="font-mono text-sm font-medium text-[var(--text-primary)] group-hover:text-white/90 transition-colors duration-200 truncate">
             {addr}
           </div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <VerificationBadge status={statusLabel} />
             {agent.heartbeats_count > 0 && (
-              <span className="text-[10px] text-white/15 font-mono">
+              <span className="text-[10px] text-[var(--text-muted)] font-mono">
                 {agent.heartbeats_count} beats
               </span>
             )}
             {timeAgo && (
-              <span className="text-[10px] text-white/10 font-mono">· {timeAgo}</span>
+              <span className="text-[10px] text-[var(--text-faint)] font-mono">· {timeAgo}</span>
             )}
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function AgentCard({ agent, onClick }) {
           >
             {score}
           </div>
-          <div className="text-[8px] text-white/15 uppercase tracking-[1.5px] font-semibold mt-0.5">
+          <div className="text-[8px] text-[var(--text-muted)] uppercase tracking-[1.5px] font-semibold mt-0.5">
             Score
           </div>
         </div>

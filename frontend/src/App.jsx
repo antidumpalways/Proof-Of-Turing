@@ -8,6 +8,7 @@ import LiveMonitor from './components/LiveMonitor'
 import Sidebar from './components/Sidebar'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider, useToast } from './components/Toast'
+import { ThemeProvider } from './components/ThemeContext'
 import Leaderboard from './components/Leaderboard'
 import Analytics from './components/Analytics'
 import Onboarding from './components/Onboarding'
@@ -17,17 +18,19 @@ export default function App() {
 
   if (page === 'landing') return <Landing onEnter={() => setPage('app')} />
   return (
-    <ToastProvider>
-      <ErrorBoundary>
-        <DashboardApp onHome={() => setPage('landing')} />
-      </ErrorBoundary>
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <ErrorBoundary>
+          <DashboardApp onHome={() => setPage('landing')} />
+        </ErrorBoundary>
+      </ToastProvider>
+    </ThemeProvider>
   )
 }
 
 function Landing({ onEnter }) {
   return (
-    <div className="relative min-h-screen bg-[#050508] text-white font-sans overflow-hidden">
+    <div className="relative min-h-screen bg-[var(--bg-body)] text-white font-sans overflow-hidden">
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -46,12 +49,12 @@ function Landing({ onEnter }) {
         <nav className="flex items-center justify-between mb-36">
           <div className="flex items-center gap-3">
             <Logo />
-            <span className="font-semibold text-sm text-white/60">Proof of Turing</span>
+            <span className="font-semibold text-sm text-[var(--text-primary)]">Proof of Turing</span>
           </div>
           <button
             onClick={onEnter}
             className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-semibold
-              hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10
+              hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--overlay)]
               active:scale-[0.97] transition-all duration-200"
           >
             Launch App
@@ -59,7 +62,7 @@ function Landing({ onEnter }) {
         </nav>
 
         <div className="text-center mb-32">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-[11px] text-white/30 font-medium mb-10
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card-hover)] border border-[var(--border)] text-[11px] text-[var(--text-secondary)] font-medium mb-10
             hover:bg-white/[0.05] transition-all duration-300">
             <span className="relative flex w-2 h-2">
               <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />
@@ -74,7 +77,7 @@ function Landing({ onEnter }) {
               is not a human
             </span>
           </h1>
-          <p className="text-base md:text-lg text-white/[0.12] max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
+          <p className="text-base md:text-lg text-[var(--text-muted)] max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
             Proof-of-Turing is an inverse captcha for Web3 — it verifies
             whether a wallet is operated by an autonomous AI agent or a
             human running scripts through four-dimensional behavioral analysis.
@@ -83,14 +86,14 @@ function Landing({ onEnter }) {
             <button
               onClick={onEnter}
               className="group px-8 py-3.5 rounded-full bg-white text-black font-semibold text-sm
-                hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/10
+                hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[var(--overlay)]
                 active:scale-[0.97] transition-all duration-200"
             >
               Enter Dashboard
             </button>
             <button
-              className="px-8 py-3.5 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/40 font-medium text-sm
-                hover:bg-white/[0.06] hover:border-white/10 hover:text-white/60 hover:-translate-y-0.5
+              className="px-8 py-3.5 rounded-full bg-[var(--bg-card-hover)] border border-[var(--border)] text-[var(--text-secondary)] font-medium text-sm
+                hover:bg-white/[0.06] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] hover:-translate-y-0.5
                 active:scale-[0.97] transition-all duration-200"
             >
               Read the Paper
@@ -100,11 +103,11 @@ function Landing({ onEnter }) {
 
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-[10px] text-white/[0.08] uppercase tracking-[3px] font-semibold mb-4">How it works</div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white/80">
+            <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[3px] font-semibold mb-4">How it works</div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--text-primary)]">
               Four dimensions of agentic analysis
             </h2>
-            <p className="text-sm text-white/[0.08] mt-3 max-w-md mx-auto">
+            <p className="text-sm text-[var(--text-faint)] mt-3 max-w-md mx-auto">
               Our oracle evaluates AI agents across four independent dimensions to determine authenticity
             </p>
           </div>
@@ -117,15 +120,15 @@ function Landing({ onEnter }) {
             ].map((f, i) => (
               <div
                 key={i}
-                className="group relative rounded-2xl bg-white/[0.015] border border-white/[0.06] p-6
-                  hover:bg-white/[0.03] hover:border-white/10 hover:-translate-y-1
+                className="group relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6
+                  hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-1
                   transition-all duration-300 ease-out"
               >
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 <div className="relative">
-                  <div className="text-[10px] font-mono text-white/[0.08] mb-4 font-semibold">{f.num}</div>
-                  <div className="font-semibold text-sm mb-2 text-white/60 group-hover:text-white/90 transition-colors duration-200">{f.title}</div>
-                  <div className="text-xs text-white/[0.12] leading-relaxed">{f.desc}</div>
+                  <div className="text-[10px] font-mono text-[var(--text-faint)] mb-4 font-semibold">{f.num}</div>
+                  <div className="font-semibold text-sm mb-2 text-[var(--text-primary)] group-hover:text-[var(--text-primary)] transition-colors duration-200">{f.title}</div>
+                  <div className="text-xs text-[var(--text-muted)] leading-relaxed">{f.desc}</div>
                 </div>
               </div>
             ))}
@@ -133,7 +136,7 @@ function Landing({ onEnter }) {
         </div>
 
         <div className="text-center mt-32">
-          <div className="text-[10px] text-white/[0.04] font-mono">
+          <div className="text-[10px] text-[var(--text-faint)] font-mono">
             Built for Mantle Network &middot; EIP-8004 Compatible
           </div>
         </div>
@@ -281,7 +284,7 @@ function DashboardApp({ onHome }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white font-sans">
+    <div className="min-h-screen bg-[var(--bg-body)] text-white font-sans">
       <Sidebar
         activeNav={selected ? null : nav}
         onNavChange={handleNavChange}
@@ -343,15 +346,15 @@ function DashboardView({
   return (
     <div className="space-y-8">
       <div className="mb-2">
-        <h1 className="text-xl font-bold tracking-tight text-white/80">Dashboard</h1>
-        <p className="text-sm text-white/20 mt-1">Overview of registered agents and their AI verification status</p>
+        <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Dashboard</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Overview of registered agents and their AI verification status</p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {statCards.map((s, i) => (
           <div
             key={i}
-            className="group relative rounded-2xl bg-white/[0.015] border border-white/[0.06] p-5 overflow-hidden
-              hover:bg-white/[0.03] hover:border-white/10 hover:-translate-y-0.5
+            className="group relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-5 overflow-hidden
+              hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5
               transition-all duration-300 ease-out"
           >
             <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
@@ -359,10 +362,10 @@ function DashboardView({
               <div className={`${s.textColor} opacity-30 group-hover:opacity-60 transition-opacity duration-300 mb-3`}>
                 {s.icon}
               </div>
-              <div className="text-3xl font-bold tracking-tight text-white/80 group-hover:text-white transition-colors duration-200">
+              <div className="text-3xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-white transition-colors duration-200">
                 {s.value}
               </div>
-              <div className="text-[10px] text-white/15 font-medium mt-1 uppercase tracking-wider">
+              <div className="text-[10px] text-[var(--text-muted)] font-medium mt-1 uppercase tracking-wider">
                 {s.label}
               </div>
             </div>
@@ -388,16 +391,16 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="h-4 w-24 rounded-md bg-white/[0.03] animate-pulse" />
-        <div className="rounded-3xl bg-white/[0.015] border border-white/[0.06] overflow-hidden">
-          <div className="p-8 border-b border-white/[0.06] space-y-4">
-            <div className="h-6 w-64 rounded-md bg-white/[0.03] animate-pulse" />
-            <div className="h-4 w-40 rounded-md bg-white/[0.02] animate-pulse" />
-            <div className="h-16 w-32 rounded-md bg-white/[0.03] animate-pulse ml-auto" />
+        <div className="h-4 w-24 rounded-md bg-[var(--bg-card-hover)] animate-pulse" />
+        <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden">
+          <div className="p-8 border-b border-[var(--border)] space-y-4">
+            <div className="h-6 w-64 rounded-md bg-[var(--bg-card-hover)] animate-pulse" />
+            <div className="h-4 w-40 rounded-md bg-[var(--bg-elevated)] animate-pulse" />
+            <div className="h-16 w-32 rounded-md bg-[var(--bg-card-hover)] animate-pulse ml-auto" />
           </div>
           <div className="p-8 space-y-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 rounded-xl bg-white/[0.015] animate-pulse" />
+              <div key={i} className="h-24 rounded-xl bg-[var(--bg-card)] animate-pulse" />
             ))}
           </div>
         </div>
@@ -408,7 +411,7 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
   if (!detail) {
     return (
       <div className="max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-white/20 hover:text-white/50 transition-colors mb-6">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-6">
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="15 18 9 12 15 6" />
           </svg>
@@ -444,7 +447,7 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
     <div className="max-w-4xl mx-auto">
       <button
         onClick={onBack}
-        className="group inline-flex items-center gap-1.5 text-xs text-white/20 hover:text-white/50 transition-colors mb-6"
+        className="group inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-6"
       >
         <svg className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="15 18 9 12 15 6" />
@@ -453,20 +456,20 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
       </button>
 
       <div
-        className="rounded-3xl bg-white/[0.015] border border-white/[0.06] overflow-hidden
-          hover:border-white/10 transition-all duration-300"
+        className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden
+          hover:border-[var(--border-hover)] transition-all duration-300"
         style={{ boxShadow: `inset 0 0 80px ${glowColor}` }}
       >
-        <div className="p-6 sm:p-8 border-b border-white/[0.06]">
+        <div className="p-6 sm:p-8 border-b border-[var(--border)]">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div className="space-y-3">
-              <div className="font-mono text-sm font-medium text-white/60 truncate max-w-xs sm:max-w-md">{addr}</div>
+              <div className="font-mono text-sm font-medium text-[var(--text-primary)] truncate max-w-xs sm:max-w-md">{addr}</div>
               <div className="flex items-center gap-3 flex-wrap">
                 <VerificationBadge
                   status={isVerified ? 'verified' : score >= 40 ? 'pending' : 'failed'}
                   score={score}
                 />
-                <span className="text-[10px] text-white/10 font-mono">
+                <span className="text-[10px] text-[var(--text-faint)] font-mono">
                   {agent.heartbeats_count || 0} heartbeats
                 </span>
               </div>
@@ -475,14 +478,14 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
               <div className={`text-6xl sm:text-7xl font-light font-mono tracking-tight ${scoreColor}`}>
                 {score}
               </div>
-              <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mt-1">Agentic Score</div>
+              <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mt-1">Agentic Score</div>
             </div>
           </div>
         </div>
 
         <div className="p-6 sm:p-8 space-y-8">
           {verification.badge && (
-            <div className="relative rounded-2xl bg-white/[0.015] border border-white/[0.06] p-6 sm:p-8 text-center overflow-hidden">
+            <div className="relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 sm:p-8 text-center overflow-hidden">
               <div className={`absolute inset-0 bg-gradient-to-br ${
                 isVerified ? 'from-emerald-500/5 to-emerald-400/5' : 'from-red-500/5 to-red-400/5'
               }`} />
@@ -502,13 +505,13 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
                     </div>
                   )}
                 </div>
-                <h3 className="text-lg font-semibold tracking-tight text-white/70 mb-1">
+                <h3 className="text-lg font-semibold tracking-tight text-[var(--text-primary)] mb-1">
                   {isVerified ? 'Verified AI Agent' : 'Not a Verified AI Agent'}
                 </h3>
-                <p className="text-sm text-white/25">{verification.badge}</p>
-                <div className="inline-flex items-center gap-3 mt-4 px-4 py-2 rounded-full bg-white/[0.02] border border-white/[0.04]">
-                  <span className="text-[10px] text-white/20 font-mono">Threshold: {verification.threshold || 70}/100</span>
-                  <span className="w-px h-3 bg-white/[0.04]" />
+                <p className="text-sm text-[var(--text-secondary)]">{verification.badge}</p>
+                <div className="inline-flex items-center gap-3 mt-4 px-4 py-2 rounded-full bg-[var(--bg-elevated)] border border-[var(--sidebar-border)]">
+                  <span className="text-[10px] text-[var(--text-muted)] font-mono">Threshold: {verification.threshold || 70}/100</span>
+                  <span className="w-px h-3 bg-[var(--text-faint)]" />
                   <span className={`text-[10px] font-mono ${scoreColor}`}>Score: {score}/100</span>
                 </div>
               </div>
@@ -517,7 +520,7 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
 
           {comps ? (
             <div>
-              <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mb-4">Analysis Results</div>
+              <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-4">Analysis Results</div>
               <div className="grid sm:grid-cols-2 gap-2">
                 {comps.map(([name, data]) => {
                   const compScore = data.score || 0
@@ -535,25 +538,25 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
                   return (
                     <div
                       key={name}
-                      className="group rounded-xl bg-white/[0.015] border border-white/[0.06] p-4
-                        hover:bg-white/[0.03] hover:border-white/10 transition-all duration-200"
+                      className="group rounded-xl bg-[var(--bg-card)] border border-[var(--border)] p-4
+                        hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs text-white/30 font-medium">{formatName(name)}</span>
+                        <span className="text-xs text-[var(--text-secondary)] font-medium">{formatName(name)}</span>
                         <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${compColor}`}>
                           {compScore}
                         </span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-white/[0.03] overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-[var(--bg-card-hover)] overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
                           style={{ width: `${compScore}%` }}
                         />
                       </div>
                       <div className="flex items-center justify-between mt-2">
-                        <span className="text-[9px] text-white/15 font-mono">Confidence: {data.confidence || '--'}</span>
+                        <span className="text-[9px] text-[var(--text-muted)] font-mono">Confidence: {data.confidence || '--'}</span>
                         {data.details?.data_points && (
-                          <span className="text-[9px] text-white/15 font-mono">{data.details.data_points} samples</span>
+                          <span className="text-[9px] text-[var(--text-muted)] font-mono">{data.details.data_points} samples</span>
                         )}
                       </div>
                     </div>
@@ -562,28 +565,28 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl bg-white/[0.015] border border-white/[0.06] p-8 text-center">
-              <svg className="w-6 h-6 mx-auto text-white/[0.06] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--border)] p-8 text-center">
+              <svg className="w-6 h-6 mx-auto text-[var(--text-faint)] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <p className="text-sm text-white/20 font-medium">Insufficient data for analysis</p>
-              <p className="text-xs text-white/10 mt-1">Submit more heartbeats to generate component scores</p>
+              <p className="text-sm text-[var(--text-muted)] font-medium">Insufficient data for analysis</p>
+              <p className="text-xs text-[var(--text-faint)] mt-1">Submit more heartbeats to generate component scores</p>
             </div>
           )}
 
           <div>
-            <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mb-4">On-Chain Status</div>
+            <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-4">On-Chain Status</div>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Score', value: detail.on_chain?.score ?? '--', color: 'text-white/60' },
+                { label: 'Score', value: detail.on_chain?.score ?? '--', color: 'text-[var(--text-primary)]' },
                 { label: 'Verified', value: detail.on_chain?.verified ? 'Yes' : 'No', color: detail.on_chain?.verified ? 'text-emerald-400' : 'text-red-400' },
-                { label: 'Heartbeats', value: agent.heartbeats_count || 0, color: 'text-white/60' },
+                { label: 'Heartbeats', value: agent.heartbeats_count || 0, color: 'text-[var(--text-primary)]' },
               ].map((item, i) => (
-                <div key={i} className="group rounded-xl bg-white/[0.015] border border-white/[0.06] p-4 text-center hover:bg-white/[0.03] hover:border-white/10 transition-all duration-200">
+                <div key={i} className="group rounded-xl bg-[var(--bg-card)] border border-[var(--border)] p-4 text-center hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200">
                   <div className={`text-lg font-mono font-semibold ${item.color} group-hover:scale-105 transition-transform duration-200`}>
                     {item.value}
                   </div>
-                  <div className="text-[9px] text-white/15 uppercase tracking-wider mt-1 font-medium">{item.label}</div>
+                  <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mt-1 font-medium">{item.label}</div>
                 </div>
               ))}
             </div>
@@ -591,7 +594,7 @@ function AgentDetail({ agent, detail, history, loading, onBack }) {
 
           {history?.history?.length > 0 && (
             <div>
-              <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mb-4">Score History</div>
+              <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-4">Score History</div>
               <ScoreChart history={history.history} wallet={agent.wallet} />
             </div>
           )}
@@ -609,23 +612,23 @@ function VerifyView({ result, loading, onVerify }) {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-white/80">Verify Agent</h1>
-        <p className="text-sm text-white/20 mt-1">Check if a wallet address is operated by an AI agent</p>
+        <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Verify Agent</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Check if a wallet address is operated by an AI agent</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex gap-2">
         <div className="relative flex-1">
-          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/[0.08] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-faint)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
           </svg>
           <input
             value={address}
             onChange={e => setAddress(e.target.value)}
             placeholder="Enter wallet address (0x...)"
-            className={`w-full bg-white/[0.02] border rounded-xl pl-11 pr-4 py-3 text-sm font-mono text-white/60 placeholder-white/[0.06] outline-none focus:ring-1 transition-all duration-200 ${
+            className={`w-full bg-[var(--bg-elevated)] border rounded-xl pl-11 pr-4 py-3 text-sm font-mono text-[var(--text-primary)] placeholder-[var(--text-faint)] outline-none focus:ring-1 transition-all duration-200 ${
               address && !isValidAddress
                 ? 'border-red-500/30 focus:border-red-500/50 focus:ring-red-500/10'
-                : 'border-white/[0.06] focus:border-white/10 focus:ring-white/[0.03] focus:bg-white/[0.04]'
+                : 'border-[var(--border)] focus:border-[var(--border-hover)] focus:ring-[var(--text-faint)] focus:bg-[var(--bg-card-hover)]'
             }`}
           />
           {address && !isValidAddress && (
@@ -636,7 +639,7 @@ function VerifyView({ result, loading, onVerify }) {
           type="submit"
           disabled={loading || !isValidAddress}
           className="px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold
-            hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/5
+            hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--overlay)]
             active:scale-[0.97] disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-none
             transition-all duration-200"
         >
@@ -650,7 +653,7 @@ function VerifyView({ result, loading, onVerify }) {
       </form>
 
       {result && (
-        <div className="rounded-3xl bg-white/[0.015] border border-white/[0.06] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
           {result.error ? (
             <div className="p-6 flex items-start gap-3">
               <svg className="w-5 h-5 text-red-400/50 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -663,10 +666,10 @@ function VerifyView({ result, loading, onVerify }) {
             </div>
           ) : (
             <>
-              <div className="p-6 sm:p-8 border-b border-white/[0.06]">
+              <div className="p-6 sm:p-8 border-b border-[var(--border)]">
                 <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div className="space-y-3">
-                    <div className="font-mono text-sm font-medium text-white/60 break-all">{result.wallet}</div>
+                    <div className="font-mono text-sm font-medium text-[var(--text-primary)] break-all">{result.wallet}</div>
                     <VerificationBadge
                       status={result.is_verified_agent ? 'verified' : result.score >= 40 ? 'pending' : 'failed'}
                       score={result.score}
@@ -678,11 +681,11 @@ function VerifyView({ result, loading, onVerify }) {
                     }`}>
                       {result.score}
                     </div>
-                    <div className="text-[10px] text-white/10 uppercase tracking-[2px] font-semibold mt-1">Score</div>
+                    <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mt-1">Score</div>
                   </div>
                 </div>
               </div>
-              <div className="px-6 sm:px-8 py-4 flex flex-wrap gap-6 text-[10px] text-white/15 font-mono bg-white/[0.01]">
+              <div className="px-6 sm:px-8 py-4 flex flex-wrap gap-6 text-[10px] text-[var(--text-muted)] font-mono bg-white/[0.01]">
                 <span className="flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-white/20" />
                   Threshold: {result.threshold || 70}/100
@@ -699,13 +702,13 @@ function VerifyView({ result, loading, onVerify }) {
 
       {!result && !loading && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex items-center justify-center mb-5">
-            <svg className="w-8 h-8 text-white/[0.06]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="w-16 h-16 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mb-5">
+            <svg className="w-8 h-8 text-[var(--text-faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-white/20">Enter a wallet address</p>
-          <p className="text-xs text-white/10 mt-1">Paste a wallet address above to check AI verification status</p>
+          <p className="text-sm font-medium text-[var(--text-muted)]">Enter a wallet address</p>
+          <p className="text-xs text-[var(--text-faint)] mt-1">Paste a wallet address above to check AI verification status</p>
         </div>
       )}
     </div>
@@ -718,7 +721,7 @@ function MonitorView() {
 
 function Logo({ small }) {
   return (
-    <div style={{ width: small ? 28 : 32, height: small ? 28 : 32 }} className="rounded-xl bg-white/10 border border-white/[0.06] flex items-center justify-center hover:bg-white/15 transition-all duration-200">
+    <div style={{ width: small ? 28 : 32, height: small ? 28 : 32 }} className="rounded-xl bg-white/10 border border-[var(--border)] flex items-center justify-center hover:bg-white/15 transition-all duration-200">
       <svg width={small ? 14 : 16} height={small ? 14 : 16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
       </svg>
