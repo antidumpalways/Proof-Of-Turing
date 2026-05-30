@@ -1,53 +1,45 @@
 import React, { useState } from 'react'
-import { useTheme } from './ThemeContext'
 
-const NAV = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
-  { id: 'leaderboard', label: 'Leaderboard', icon: 'award' },
-  { id: 'analytics', label: 'Analytics', icon: 'chart' },
-  { id: 'verify', label: 'Verify', icon: 'search' },
-  { id: 'monitor', label: 'Monitor', icon: 'activity' },
-  { id: 'onboarding', label: 'Onboarding', icon: 'book' },
+const SECTIONS = [
+  {
+    title: 'Overview',
+    items: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'home' },
+    ],
+  },
+  {
+    title: 'Intelligence',
+    items: [
+      { id: 'alpha', label: 'Alpha Intel', icon: 'brain', badge: '4x' },
+      { id: 'leaderboard', label: 'Leaderboard', icon: 'trophy' },
+    ],
+  },
+  {
+    title: 'Analytics',
+    items: [
+      { id: 'analytics', label: 'Analytics', icon: 'chart' },
+      { id: 'monitor', label: 'Activity Log', icon: 'terminal' },
+    ],
+  },
+  {
+    title: 'System',
+    items: [
+      { id: 'guide', label: 'API Reference', icon: 'code' },
+    ],
+  },
 ]
 
 const ICONS = {
-  grid: (
-    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-      <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
-    </svg>
-  ),
-  award: (
-    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-    </svg>
-  ),
-  chart: (
-    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M18 20V10M12 20V4M6 20v-6" />
-    </svg>
-  ),
-  search: (
-    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
-    </svg>
-  ),
-  activity: (
-    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-    </svg>
-  ),
-  book: (
-    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  ),
+  home: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+  brain: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a4 4 0 014 4v2a4 4 0 01-8 0V6a4 4 0 014-4z" /><path d="M16 10v2a4 4 0 01-8 0v-2" /><path d="M12 18v4" /><path d="M8 22h8" /></svg>,
+  trophy: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z" /></svg>,
+  chart: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>,
+  terminal: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>,
+  code: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
 }
 
 export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { theme, toggleTheme } = useTheme()
 
   const handleNav = (id) => {
     onNavChange(id)
@@ -56,104 +48,80 @@ export default function Sidebar({ activeNav, onNavChange, oracleOnline, onHome }
 
   return (
     <>
-      {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-[var(--overlay)] backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-3 left-3 z-50 w-9 h-9 rounded-xl bg-[var(--bg-card)] border border-white/[0.06] flex items-center justify-center lg:hidden hover:bg-white/[0.06] transition-all"
+        className="fixed top-3 left-3 z-50 w-8 h-8 rounded-md bg-[var(--bg-card)] border border-[var(--border)] flex items-center justify-center lg:hidden hover:bg-[var(--bg-card-hover)] transition-all"
       >
         <svg className="w-4 h-4 text-[var(--text-secondary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           {mobileOpen ? <path d="M18 6L6 18M6 6l12 12" /> : <><path d="M3 12h18" /><path d="M3 6h18" /><path d="M3 18h18" /></>}
         </svg>
       </button>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 z-40 h-full w-60 bg-[var(--sidebar-bg)] backdrop-blur-2xl border-r border-[var(--sidebar-border)] flex flex-col transition-transform duration-300 ease-out lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
+      <aside className={`fixed top-0 left-0 z-40 h-full w-[260px] bg-[var(--bg-sidebar)] flex flex-col transition-transform duration-200 lg:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Logo */}
-        <div className="p-5 border-b border-[var(--sidebar-border)]">
-          <button onClick={onHome} className="flex items-center gap-3 hover:opacity-70 transition-all">
-            <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/[0.06] flex items-center justify-center">
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="h-14 flex items-center px-5 border-b border-[var(--sidebar-border)]">
+          <button onClick={onHome} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #65B3AE, #4a9d99)' }}>
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
               </svg>
             </div>
             <div>
-              <div className="text-sm font-semibold text-[var(--text-primary)]">Proof of Turing</div>
-              <div className="text-[9px] text-[var(--text-faint)] font-mono">Inverse Captcha</div>
+              <div className="text-[13px] font-semibold text-white tracking-tight">Proof of Turing</div>
+              <div className="text-[10px] text-[var(--sidebar-text)] font-mono">v1.0.0</div>
             </div>
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV.map((n) => {
-            const active = activeNav === n.id
-            return (
-              <button
-                key={n.id}
-                onClick={() => handleNav(n.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                  active
-                    ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-[var(--text-muted)] hover:text-white/50 hover:bg-[var(--bg-card)]'
-                }`}
-              >
-                <span className={`${active ? 'text-emerald-400' : 'text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]'} transition-colors`}>
-                  {ICONS[n.icon]}
-                </span>
-                {n.label}
-                {active && <span className="ml-auto w-1 h-1 rounded-full bg-emerald-400" />}
-              </button>
-            )
-          })}
+        {/* Navigation */}
+        <nav className="flex-1 py-3 px-3 space-y-5 overflow-y-auto">
+          {SECTIONS.map((section) => (
+            <div key={section.title}>
+              <div className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-text)]">
+                {section.title}
+              </div>
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
+                  const active = activeNav === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNav(item.id)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150 ${
+                        active
+                          ? 'bg-[var(--sidebar-active)] text-[var(--sidebar-text-active)]'
+                          : 'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-active)] hover:bg-[var(--sidebar-hover)]'
+                      }`}
+                    >
+                      <span className={active ? 'text-[var(--accent)]' : ''}>{ICONS[item.icon]}</span>
+                      {item.label}
+                      {item.badge && (
+                        <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-[var(--accent)]/15 text-[var(--accent)]">
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        {/* Theme Toggle */}
-        <div className="px-4 py-2 border-t border-[var(--sidebar-border)]">
-          <button
-            onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:text-white/50 hover:bg-[var(--bg-card)] transition-all duration-200 group"
-          >
-            <span className="w-[18px] h-[18px] flex items-center justify-center">
-              {theme === 'dark' ? (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
-            </span>
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-          </button>
-        </div>
-
-        {/* Oracle Status */}
-        <div className="p-4 border-t border-[var(--sidebar-border)]">
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[var(--bg-elevated)]">
+        {/* Bottom */}
+        <div className="border-t border-[var(--sidebar-border)] p-3">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-[var(--sidebar-hover)]">
             <span className="relative flex w-2 h-2 shrink-0">
-              {oracleOnline && (
-                <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />
-              )}
-              <span className={`relative rounded-full w-2 h-2 ${oracleOnline ? 'bg-emerald-400' : 'bg-red-400'}`} />
+              {oracleOnline && <span className="absolute inset-0 rounded-full bg-[var(--success)] animate-ping opacity-40" />}
+              <span className={`relative rounded-full w-2 h-2 ${oracleOnline ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`} />
             </span>
-            <div className="min-w-0">
-              <div className="text-[10px] font-medium text-[var(--text-secondary)] truncate">
-                {oracleOnline ? 'Oracle Online' : 'Disconnected'}
-              </div>
-              <div className="text-[8px] text-[var(--text-faint)] font-mono">Mantle Network</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-medium text-[var(--sidebar-text-active)]">{oracleOnline ? 'Oracle Online' : 'Offline'}</div>
+              <div className="text-[9px] text-[var(--sidebar-text)] font-mono">Mantle Sepolia</div>
             </div>
           </div>
         </div>

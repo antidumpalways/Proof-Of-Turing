@@ -23,7 +23,8 @@ def init_db():
             wallet TEXT PRIMARY KEY,
             token_id INTEGER DEFAULT 0,
             registered_at INTEGER NOT NULL,
-            status TEXT DEFAULT 'pending'
+            status TEXT DEFAULT 'pending',
+            source TEXT DEFAULT 'direct'
         );
 
         CREATE TABLE IF NOT EXISTS heartbeats (
@@ -40,7 +41,8 @@ def init_db():
             amount REAL,
             received_at INTEGER NOT NULL,
             signature TEXT,
-            signer TEXT
+            signer TEXT,
+            source TEXT DEFAULT 'direct'
         );
 
         CREATE TABLE IF NOT EXISTS scores (
@@ -56,7 +58,19 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_heartbeats_received ON heartbeats(received_at);
         CREATE INDEX IF NOT EXISTS idx_scores_wallet ON scores(wallet);
         CREATE INDEX IF NOT EXISTS idx_scores_timestamp ON scores(timestamp DESC);
+        CREATE INDEX IF NOT EXISTS idx_heartbeats_source ON heartbeats(source);
     """)
+
+    # Migration: add source columns if missing (existing databases)
+    try:
+        conn.execute("ALTER TABLE heartbeats ADD COLUMN source TEXT DEFAULT 'direct'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE agents ADD COLUMN source TEXT DEFAULT 'direct'")
+    except sqlite3.OperationalError:
+        pass
+
     conn.commit()
     conn.close()
 
@@ -67,8 +81,8 @@ def save_heartbeat(wallet: str, data: dict) -> int:
     conn.execute(
         """INSERT INTO heartbeats
         (wallet, timestamp, action, tx_hash, gas_used, block_number,
-         market_event, strategy_type, asset, amount, received_at, signature, signer)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+         market_event, strategy_type, asset, amount, received_at, signature, signer, source)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
             wallet.lower(),
             data.get("timestamp", received),
@@ -83,6 +97,7 @@ def save_heartbeat(wallet: str, data: dict) -> int:
             received,
             data.get("signature"),
             data.get("signer"),
+            data.get("source", "direct"),
         ),
     )
     conn.commit()
@@ -111,13 +126,13 @@ def count_heartbeats(wallet: str) -> int:
     return row["cnt"] if row else 0
 
 
-def register_agent(wallet: str, token_id: int = 0) -> bool:
+def register_agent(wallet: str, token_id: int = 0, source: str = "direct") -> bool:
     conn = get_conn()
     now = int(time.time())
     try:
         conn.execute(
-            "INSERT OR IGNORE INTO agents (wallet, token_id, registered_at) VALUES (?, ?, ?)",
-            (wallet.lower(), token_id, now),
+            "INSERT OR IGNORE INTO agents (wallet, token_id, registered_at, source) VALUES (?, ?, ?, ?)",
+            (wallet.lower(), token_id, now, source),
         )
         conn.commit()
         conn.close()
@@ -189,14 +204,14 @@ def get_agent_list(page: int = 1, limit: int = 20) -> tuple:
     conn = get_conn()
     offset = (page - 1) * limit
 
-    # Single JOIN query: agents + latest score + heartbeat stats
     rows = conn.execute(
         """SELECT
             COALESCE(hb.wallet, a.wallet) as wallet,
             s.overall_score,
             s.status,
             hb.beat_count,
-            hb.last_seen
+            hb.last_seen,
+            COALESCE(a.source, 'direct') as source
         FROM (
             SELECT wallet FROM heartbeats
             UNION
@@ -206,6 +221,7 @@ def get_agent_list(page: int = 1, limit: int = 20) -> tuple:
             SELECT wallet, COUNT(*) as beat_count, MAX(timestamp) as last_seen
             FROM heartbeats GROUP BY wallet
         ) hb ON hb.wallet = all_wallets.wallet
+        LEFT JOIN agents a ON a.wallet = all_wallets.wallet
         LEFT JOIN (
             SELECT wallet, overall_score, status
             FROM scores
@@ -238,6 +254,7 @@ def get_agent_list(page: int = 1, limit: int = 20) -> tuple:
                 "is_verified": (score >= 70 and st == "verified_agent"),
                 "heartbeats_count": r["beat_count"] or 0,
                 "last_seen": r["last_seen"] or 0,
+                "source": r["source"] or "direct",
             }
         )
 

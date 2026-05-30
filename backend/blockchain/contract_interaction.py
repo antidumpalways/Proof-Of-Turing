@@ -5,9 +5,12 @@ Handles all interactions with the PoTRegistry smart contract on Mantle.
 """
 import json
 import os
+import logging
 from web3 import Web3
 from typing import Optional, Dict, Any
 from config import settings
+
+log = logging.getLogger("pot-contract")
 
 
 class PoTContract:
@@ -48,7 +51,7 @@ class PoTContract:
         return [
             {
                 "inputs": [{"name": "_wallet", "type": "address"}, {"name": "_score", "type": "uint256"}],
-                "name": "submitScore",
+                "name": "verifyAgentDirect",
                 "outputs": [],
                 "stateMutability": "nonpayable",
                 "type": "function"
@@ -67,25 +70,30 @@ class PoTContract:
                 "stateMutability": "view",
                 "type": "function"
             },
+            {
+                "inputs": [],
+                "name": "getTotalVerifiedAgents",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getTotalAgents",
+                "outputs": [{"name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
         ]
 
-    def submit_score(self, agent_wallet: str, score: int) -> Optional[str]:
-        """
-        Submit a score to the PoTRegistry smart contract.
-
-        Args:
-            agent_wallet: Agent wallet address
-            score: Score 0-100
-
-        Returns:
-            Transaction hash if successful, None otherwise
-        """
+    def verify_agent_direct(self, agent_wallet: str, score: int) -> Optional[str]:
+        """Register and verify an agent on-chain in one call using verifyAgentDirect."""
         if not self.contract or not self.private_key:
-            print("Warning: Contract not configured. Score not submitted on-chain.")
+            log.warning("Contract not configured. Score not submitted on-chain.")
             return None
 
         try:
-            tx = self.contract.functions.submitScore(
+            tx = self.contract.functions.verifyAgentDirect(
                 Web3.to_checksum_address(agent_wallet),
                 score
             ).build_transaction({
@@ -93,7 +101,7 @@ class PoTContract:
                 "nonce": self.w3.eth.get_transaction_count(
                     Web3.to_checksum_address(self.oracle_address)
                 ),
-                "gas": 200000,
+                "gas": 300000,
                 "gasPrice": self.w3.eth.gas_price,
                 "chainId": settings.MANTLE_CHAIN_ID,
             })
@@ -109,7 +117,7 @@ class PoTContract:
             return receipt.transactionHash.hex()
 
         except Exception as e:
-            print(f"Error submitting score: {e}")
+            log.error("Error in verifyAgentDirect: %s", e)
             return None
 
     def get_agent_score(self, wallet: str) -> int:

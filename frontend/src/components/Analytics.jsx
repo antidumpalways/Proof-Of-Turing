@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const API_BASE = '/api/v1'
 
 const scoreColors = {
-  verified: '#34d399',
+  verified: '#0081c0',
   pending: '#fbbf24',
   failed: '#f87171',
 }
@@ -33,7 +33,7 @@ export default function Analytics() {
       <div className="flex items-center justify-center py-24">
         <div className="relative w-10 h-10">
           <div className="absolute inset-0 rounded-full border-2 border-[var(--sidebar-border)] border-t-white/30 animate-spin" />
-          <div className="absolute inset-1 rounded-full border-2 border-white/[0.02] border-t-emerald-400/30 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
+          <div className="absolute inset-1 rounded-full border-2 border-white/[0.02] border-t-[var(--color-action-azure)]/30 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
         </div>
       </div>
     )
@@ -65,19 +65,19 @@ export default function Analytics() {
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Analytics</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Network-wide statistics and agent insights</p>
+        <h1 className="font-serif text-2xl font-[400] tracking-tight text-[var(--text-primary)]">Analytics</h1>
+        <p className="font-serif italic text-sm text-[var(--text-muted)] mt-1">Network-wide statistics and agent insights</p>
       </div>
 
       {/* Stats overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Total Agents', value: total, icon: 'users', color: 'text-blue-400' },
-          { label: 'Verified AI', value: verified, icon: 'check', color: 'text-emerald-400' },
+          { label: 'Verified AI', value: verified, icon: 'check', color: 'text-[var(--color-action-azure)]' },
           { label: 'Avg Score', value: avgScore, icon: 'trending', color: 'text-amber-400' },
           { label: 'Total Heartbeats', value: totalBeats, icon: 'activity', color: 'text-violet-400' },
         ].map((s, i) => (
-          <div key={i} className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-5 hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200">
+          <div key={i} className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-5 hover:bg-[var(--bg-card-hover)] hover:border-[var(--color-action-azure)]/30 transition-all duration-200">
             <div className={`${s.color} opacity-30 mb-3`}>
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 {s.icon === 'users' && <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></>}
@@ -87,18 +87,18 @@ export default function Analytics() {
               </svg>
             </div>
             <div className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">{s.value}</div>
-            <div className="text-[10px] text-[var(--text-muted)] font-medium mt-1 uppercase tracking-wider">{s.label}</div>
+            <div className="font-serif italic text-[10px] text-[var(--text-muted)] mt-1 uppercase tracking-wider">{s.label}</div>
           </div>
         ))}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Score Distribution Pie */}
-        <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200">
-          <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-6">Score Distribution</div>
+        <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 hover:bg-[var(--bg-card-hover)] hover:border-[var(--color-action-azure)]/30 transition-all duration-200">
+          <div className="font-serif italic text-[11px] text-[var(--text-faint)] tracking-[1px] mb-6">Score Distribution</div>
           {total === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-[var(--text-muted)]">No data yet</p>
+              <p className="font-serif italic text-sm text-[var(--text-muted)]">No data yet</p>
             </div>
           ) : (
             <div className="flex items-center gap-6">
@@ -115,7 +115,7 @@ export default function Analytics() {
                         return (
                           <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/[0.08] rounded-xl px-4 py-3 shadow-2xl">
                             <p className="text-[11px] text-[var(--text-primary)] font-medium">{payload[0].name}</p>
-                            <p className="text-xs text-[var(--text-secondary)] font-mono mt-1">{payload[0].value} agents</p>
+                            <p className="text-xs text-[var(--text-secondary)] font-mono mt-1">{payload[0].value} wallets</p>
                           </div>
                         )
                       }
@@ -137,11 +137,11 @@ export default function Analytics() {
         </div>
 
         {/* Top Agents Bar Chart */}
-        <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200">
-          <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-6">Top 10 Agents by Score</div>
+        <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 hover:bg-[var(--bg-card-hover)] hover:border-[var(--color-action-azure)]/30 transition-all duration-200">
+          <div className="font-serif italic text-[11px] text-[var(--text-faint)] tracking-[1px] mb-6">Top 10 Agents by Score</div>
           {topAgents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-[var(--text-muted)]">No data yet</p>
+              <p className="font-serif italic text-sm text-[var(--text-muted)]">No data yet</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
@@ -155,14 +155,14 @@ export default function Analytics() {
                       return (
                         <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/[0.08] rounded-xl px-4 py-3 shadow-2xl">
                           <p className="text-[11px] text-[var(--text-secondary)] font-mono">{payload[0].payload.name}</p>
-                          <p className="text-sm font-bold text-emerald-400">Score: {payload[0].value}</p>
+                          <p className="text-sm font-bold text-[var(--color-action-azure)]">Score: {payload[0].value}</p>
                         </div>
                       )
                     }
                     return null
                   }}
                 />
-                <Bar dataKey="score" radius={[4, 4, 0, 0]} fill="#34d399" opacity={0.6} />
+                <Bar dataKey="score" radius={[4, 4, 0, 0]} fill="#0081c0" opacity={0.55} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -170,16 +170,16 @@ export default function Analytics() {
       </div>
 
       {/* Verification Rate Card */}
-      <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200">
-        <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-4">Verification Overview</div>
+      <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 hover:bg-[var(--bg-card-hover)] hover:border-[var(--color-action-azure)]/30 transition-all duration-200">
+        <div className="font-serif italic text-[11px] text-[var(--text-faint)] tracking-[1px] mb-4">Verification Overview</div>
         {total === 0 ? (
-          <p className="text-sm text-[var(--text-muted)] py-8 text-center">No agents registered yet</p>
+          <p className="font-serif italic text-sm text-[var(--text-muted)] py-8 text-center">No wallets analyzed yet</p>
         ) : (
           <div className="flex items-center gap-8 flex-wrap">
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <span className="text-xs text-[var(--text-secondary)] font-medium w-24 shrink-0">Verification Rate</span>
               <div className="flex-1 h-2 rounded-full bg-[var(--bg-card-hover)] overflow-hidden">
-                <div className="h-full rounded-full bg-emerald-400/50 transition-all duration-1000" style={{ width: `${total ? (verified / total) * 100 : 0}%` }} />
+                <div className="h-full rounded-full bg-[var(--color-cofounder-blue)]/60 transition-all duration-1000" style={{ width: `${total ? (verified / total) * 100 : 0}%` }} />
               </div>
               <span className="text-xs font-mono text-[var(--text-secondary)] w-12 text-right shrink-0">
                 {total ? Math.round((verified / total) * 100) : 0}%
@@ -187,7 +187,7 @@ export default function Analytics() {
             </div>
             <div className="flex gap-6 text-[10px] text-[var(--text-muted)] font-mono">
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {verified} verified
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-cofounder-blue)]" /> {verified} verified
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> {pending} pending

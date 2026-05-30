@@ -40,6 +40,7 @@ contract PoTRegistry {
     mapping(address => ScoreRecord[]) public scoreHistory;
 
     address[] public agentAddresses;
+    address[] public verifiedAgentList;
 
     // ============ Events ============
 
@@ -100,6 +101,51 @@ contract PoTRegistry {
         agentAddresses.push(wallet);
 
         emit AgentRegistered(wallet, _tokenId, block.timestamp);
+    }
+
+    /// @notice Directly verify a wallet without ERC-8004 (oracle only, for Byreal agents)
+    /// @param _wallet The agent wallet
+    /// @param _score The agentic score (0-100)
+    function verifyAgentDirect(address _wallet, uint256 _score) external onlyOracle {
+        require(_score <= 100, "PoTRegistry: score must be 0-100");
+        require(_wallet != address(0), "PoTRegistry: invalid wallet");
+
+        AgentInfo storage agent = agents[_wallet];
+        if (agent.status == AgentStatus.Unverified) {
+            agents[_wallet] = AgentInfo({
+                erc8004TokenId: 0,
+                wallet: _wallet,
+                status: AgentStatus.Pending,
+                agenticScore: 0,
+                lastHeartbeat: 0,
+                heartbeatsCount: 0,
+                verificationTimestamp: 0,
+                lastScoreUpdate: 0
+            });
+            agentAddresses.push(_wallet);
+            emit AgentRegistered(_wallet, 0, block.timestamp);
+        }
+
+        agent.agenticScore = _score;
+        agent.lastScoreUpdate = block.timestamp;
+
+        scoreHistory[_wallet].push(ScoreRecord({
+            score: _score,
+            timestamp: block.timestamp
+        }));
+
+        if (_score >= 70) {
+            if (agent.status != AgentStatus.Verified) {
+                verifiedAgentList.push(_wallet);
+            }
+            agent.status = AgentStatus.Verified;
+            agent.verificationTimestamp = block.timestamp;
+            emit AgentVerified(_wallet, block.timestamp);
+        } else {
+            agent.status = AgentStatus.Pending;
+        }
+
+        emit ScoreUpdated(_wallet, _score, block.timestamp);
     }
 
     /// @notice Submit a heartbeat from an agent wallet
@@ -187,6 +233,24 @@ contract PoTRegistry {
     function getScoreHistory(address _wallet) external view returns (ScoreRecord[] memory) {
         require(agents[_wallet].status != AgentStatus.Unverified, "PoTRegistry: agent not registered");
         return scoreHistory[_wallet];
+    }
+
+    /// @notice Get all registered agent addresses
+    /// @return Array of agent addresses
+    function getAllAgents() external view returns (address[] memory) {
+        return agentAddresses;
+    }
+
+    /// @notice Get all verified agent addresses
+    /// @return Array of verified agent addresses
+    function getAllVerifiedAgents() external view returns (address[] memory) {
+        return verifiedAgentList;
+    }
+
+    /// @notice Get total number of verified agents
+    /// @return The count of verified agent addresses
+    function getTotalVerifiedAgents() external view returns (uint256) {
+        return verifiedAgentList.length;
     }
 
     /// @notice Get total number of registered agents

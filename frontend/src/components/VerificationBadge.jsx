@@ -16,7 +16,7 @@ export default function VerificationBadge({ status = 'no_data', score, size = 's
         </svg>
       ),
       label: 'Verified AI',
-      classes: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      classes: 'bg-[var(--color-cofounder-blue)]/10 text-[var(--color-cofounder-blue)] border-[var(--color-cofounder-blue)]/20',
     },
     pending: {
       icon: (

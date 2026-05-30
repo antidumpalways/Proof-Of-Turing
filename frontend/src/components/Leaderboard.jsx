@@ -50,16 +50,16 @@ export default function Leaderboard({ onAgentClick }) {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Leaderboard</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Top ranked AI agents by agentic score</p>
+          <h1 className="font-serif text-2xl font-[400] tracking-tight text-[var(--text-primary)]">Leaderboard</h1>
+          <p className="font-serif italic text-sm text-[var(--text-muted)] mt-1">Top ranked wallets by alpha score</p>
         </div>
         <div className="flex items-center gap-2">
           {['all', 'verified', 'pending', 'failed'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 ${
-                filter === f ? 'bg-white/10 text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
+              className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all duration-200 ${
+                filter === f ? 'bg-[var(--color-action-azure)]/15 text-[var(--color-action-azure)] border border-[var(--color-action-azure)]/20' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]'
               }`}
             >
               {f === 'all' ? 'All' : f === 'verified' ? 'Verified' : f === 'pending' ? 'Pending' : 'Failed'}
@@ -77,7 +77,7 @@ export default function Leaderboard({ onAgentClick }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by address..."
-          className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl pl-11 pr-4 py-2.5 text-sm font-mono text-[var(--text-primary)] placeholder-[var(--text-faint)] outline-none focus:border-[var(--border-hover)] focus:bg-[var(--bg-card-hover)] transition-all duration-200"
+          className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl pl-11 pr-4 py-2.5 text-sm font-mono text-[var(--text-primary)] placeholder-[var(--text-faint)] outline-none focus:border-[var(--color-action-azure)]/30 focus:bg-[var(--bg-card-hover)] transition-all duration-200"
         />
       </div>
 
@@ -85,7 +85,7 @@ export default function Leaderboard({ onAgentClick }) {
         <div className="flex items-center justify-center py-24">
           <div className="relative w-10 h-10">
             <div className="absolute inset-0 rounded-full border-2 border-[var(--sidebar-border)] border-t-white/30 animate-spin" />
-            <div className="absolute inset-1 rounded-full border-2 border-white/[0.02] border-t-emerald-400/30 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
+            <div className="absolute inset-1 rounded-full border-2 border-white/[0.02] border-t-[var(--color-action-azure)]/30 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }} />
           </div>
         </div>
       ) : filtered.length === 0 ? (
@@ -95,8 +95,8 @@ export default function Leaderboard({ onAgentClick }) {
               <circle cx="12" cy="8" r="6" /><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-[var(--text-muted)]">No agents found</p>
-          <p className="text-xs text-[var(--text-faint)] mt-1">Try a different filter or search term</p>
+          <p className="font-serif italic text-sm font-medium text-[var(--text-muted)]">No wallets found</p>
+          <p className="font-serif italic text-xs text-[var(--text-faint)] mt-1">Try a different filter or search term</p>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -108,7 +108,7 @@ export default function Leaderboard({ onAgentClick }) {
               <div
                 key={agent.wallet}
                 onClick={() => onAgentClick?.(agent)}
-                className="group relative rounded-xl bg-[var(--bg-card)] border border-[var(--border)] px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5 transition-all duration-200"
+                className="group relative rounded-xl bg-[var(--bg-card)] border border-[var(--border)] px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[var(--bg-card-hover)] hover:border-[var(--color-action-azure)]/30 hover:-translate-y-0.5 transition-all duration-200"
               >
                 <div className="w-8 text-center shrink-0">
                   {isMedal ? (
@@ -132,7 +132,7 @@ export default function Leaderboard({ onAgentClick }) {
                   <span className="text-[10px] text-[var(--text-faint)] font-mono">{agent.heartbeats_count || 0} beats</span>
                   <div className="text-right">
                     <div className={`text-lg font-bold font-mono tracking-tight ${
-                      agent.is_verified ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'
+                      agent.is_verified ? 'text-[var(--color-action-azure)]' : score >= 40 ? 'text-amber-400' : 'text-red-400'
                     }`}>
                       {score}
                     </div>

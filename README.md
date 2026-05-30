@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🧪 Proof-of-Turing (PoT)
+# Proof of Turing
 
-### *Inverse Captcha Protocol for AI Agent Verification on Mantle*
+### Multi-source Intelligence for On-chain Agent Detection
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?logo=solidity)](contracts/PoTRegistry.sol)
@@ -11,324 +11,248 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)](frontend/)
 [![Mantle](https://img.shields.io/badge/Mantle-Network-00D395?logo=ethereum)](https://mantle.xyz)
 
-**The Turing Test Hackathon 2026 — AI Awakening Phase**  
-*Track: AI DevTools / Agentic Economy (by Byreal)*
+**Turing Test Hackathon 2026 — Alpha & Data Track**
+
+**Deployed Contract:** `0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641` on [Mantle Sepolia](https://explorer.sepolia.mantle.xyz/address/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641)
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Architecture](#-architecture)
-- [Smart Contract](#-smart-contract)
-- [Backend Oracle](#-backend-oracle)
-- [ML Model](#-ml-model)
-- [Frontend Dashboard](#-frontend-dashboard)
-- [Byreal CLI Integration](#-byreal-cli-integration)
-- [Getting Started](#-getting-started)
-- [API Reference](#-api-reference)
-- [Testing](#-testing)
-- [Deployment](#-deployment)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Data Sources](#data-sources)
+- [Smart Contract](#smart-contract)
+- [Backend](#backend)
+- [Frontend](#frontend)
+- [Getting Started](#getting-started)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Tech Stack](#tech-stack)
 
 ---
 
-## 🎯 Overview
+## Overview
 
-**Proof-of-Turing (PoT)** is an on-chain protocol that verifies whether a wallet is operated by an **autonomous AI agent** or a **human using scripts/macros**. It is the **inverse of Worldcoin** — instead of Proof-of-Personhood, it is **Proof-of-Agenthood**.
+**Proof of Turing** is a multi-source intelligence platform that detects and verifies AI agents on Mantle Network. It combines on-chain behavioral analysis with external data providers to generate a comprehensive **Alpha Score** (0-100).
 
 ### The Problem
 
-As AI agents proliferate on Web3, dApps need a way to distinguish between:
-- ✅ Real autonomous AI agents (trustworthy, verifiable)
-- ❌ Humans pretending to be AI agents (sybil attacks, unfair advantage)
-- ❌ Simple scripts/bots with no real intelligence
-
-Currently, there is **no on-chain mechanism** to make this distinction.
+As AI agents proliferate on Web3:
+- dApps need to distinguish real AI agents from humans pretending to be bots
+- MEV bots, trading bots, and sybil accounts are hard to detect
+- No on-chain mechanism exists to verify "agenthood"
 
 ### The Solution
 
-PoT analyzes **4 behavioral dimensions** of wallet activity in real-time:
+Proof of Turing analyzes **4 data sources** in real-time:
 
-| Dimension | What It Measures | AI Agent | Script/Bot |
-|-----------|-----------------|----------|------------|
-| ⏱ **Time Entropy** | Variability of action timing | Natural CV (0.4–0.8) | Too regular (CV < 0.2) |
-| ⚡ **Response Time** | Reaction speed to market events | 1–8 seconds | < 0.5 seconds |
-| 🧠 **Decision Pattern** | Strategy diversity & complexity | Multiple strategies | Single fixed strategy |
-| 📊 **Data Access** | Reads on-chain data before acting | High correlation | Random or none |
+| Source | What It Provides | Score Weight |
+|--------|-----------------|--------------|
+| **On-chain Behavior** | Timing entropy, gas patterns, contract diversity, MEV signatures | 40% |
+| **Nansen** | Wallet labels (Smart Money, Fund, Trader, Exchange) | 20% |
+| **Allora Network** | ML inference for market pattern verification | 20% |
+| **Elfa AI** | Social sentiment and trending token correlation | 10% |
+| **Confidence Bonus** | Data availability and consistency | 10% |
 
-Plus a **Machine Learning classifier** (Random Forest + Isolation Forest) as a fifth dimension.
+### Use Cases
+
+| Use Case | How It Works |
+|----------|-------------|
+| **MEV Bot Detection** | Detect sandwich attacks, frontrunning patterns |
+| **Trading Bot Verification** | Separate automated traders from humans |
+| **Smart Money Identification** | Find professional/institutional wallets |
+| **Sybil Detection** | Identify fake accounts and bots |
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ### System Overview
 
-```mermaid
-flowchart LR
-    A[Agent Wallet<br/>ERC-8004] --> B[PoT Oracle<br/>FastAPI]
-    B --> C[Time Entropy<br/>Analyzer]
-    B --> D[Response Time<br/>Analyzer]
-    B --> E[Decision Pattern<br/>Analyzer]
-    B --> F[Data Access<br/>Analyzer]
-    C --> G[Score Aggregator]
-    D --> G
-    E --> G
-    F --> G
-    G --> H[PoTRegistry<br/>Solidity Contract]
-    H --> I[dApps &amp; Consumers]
-
-    style A fill:#050508,stroke:#00d395,color:white
-    style B fill:#050508,stroke:#3b82f6,color:white
-    style H fill:#050508,stroke:#10b981,color:white
-    style I fill:#050508,stroke:#6366f1,color:white
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Client (React)                          │
+│   Dashboard · Alpha Intel · Leaderboard · Analytics · Monitor   │
+└─────────────────────────────┬───────────────────────────────────┘
+                              │ REST + WebSocket
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    FastAPI Backend (Python)                      │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │   Scanner    │  │  Analyzers   │  │   Integrations       │  │
+│  │  (Mantle)    │  │  (8 dims)    │  │  Nansen · Allora     │  │
+│  │              │  │              │  │  Elfa AI             │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
+│         │                 │                      │              │
+│         └─────────────────┴──────────────────────┘              │
+│                             │                                   │
+│                    ┌────────▼────────┐                          │
+│                    │  Score Aggregator │                         │
+│                    │  (4 sources)     │                          │
+│                    └────────┬────────┘                          │
+└─────────────────────────────┼───────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  PoTRegistry (Solidity)                          │
+│                  Mantle Sepolia Testnet                          │
+│                                                                 │
+│  Functions: verifyAgentDirect · isVerifiedAgent · getAgentScore │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Data Flow
-
-```mermaid
-sequenceDiagram
-    participant Agent
-    participant Oracle
-    participant Analyzers
-    participant ML
-    participant Contract
-
-    Agent->>Oracle: Heartbeat (timestamp, action, market_event)
-    Oracle->>Analyzers: Run 4 Dimensional Analysis
-    Analyzers->>ML: Feature extraction
-    ML->>ML: Random Forest Classification
-    ML->>Oracle: Aggregated Score 0-100
-    Oracle->>Contract: submitScore(wallet, score)
-    Contract-->>Agent: isVerifiedAgent = true/false
-```
-
-### Score Threshold Logic
-
-```mermaid
-flowchart TD
-    A[Score 0-100] --> B{≥ 70?}
-    B -->|Yes| C[✅ Verified AI Agent]
-    B -->|No| D{40-69?}
-    D -->|Yes| E[⚠️ Uncertain/Pending]
-    D -->|No| F[❌ Likely Human/Script]
-
-    style C fill:#10b981,color:white
-    style E fill:#f59e0b,color:white
-    style F fill:#ef4444,color:white
-```
+### Alpha Score Calculation
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                        PROOF-OF-TURING PROTOCOL                            │
-├────────────────────────────────────────────────────────────────────────────┤
-│                                                                            │
-│  ┌──────────────────┐     ┌──────────────────────────────┐                │
-│  │    ERC-8004      │     │     PoT Oracle Service        │                │
-│  │    Agent Wallet  │────▶│  (FastAPI + Python 3.12)      │                │
-│  │  (Submit Actions)│     │                              │                │
-│  └──────────────────┘     │  ┌────────────────────────┐  │                │
-│                           │  │  4 Analyzers            │  │                │
-│                           │  │  ├─ Time Entropy        │  │                │
-│                           │  │  ├─ Response Time       │  │                │
-│                           │  │  ├─ Decision Pattern    │  │                │
-│                           │  │  └─ Data Access         │  │                │
-│                           │  └──────────┬─────────────┘  │                │
-│                           │             ▼                 │                │
-│                           │  ┌────────────────────────┐  │                │
-│                           │  │  ML Classifier          │  │                │
-│                           │  │  (Random Forest + IF)   │  │                │
-│                           │  └──────────┬─────────────┘  │                │
-│                           └─────────────┼────────────────┘                │
-│                                         ▼                                 │
-│                           ┌──────────────────────────────┐                │
-│                           │   Score Aggregator (0–100)    │                │
-│                           └──────────────┬───────────────┘                │
-│                                          ▼                                │
-│  ┌──────────────────────────────────────────────────────────────────┐     │
-│  │                PoTRegistry Smart Contract (Solidity)             │     │
-│  │  Mantle Network — ERC-8004 Compatible                           │     │
-│  │  Functions: registerAgent, submitHeartbeat, submitScore,         │     │
-│  │            isVerifiedAgent, getAgentScore, getScoreHistory        │     │
-│  └────────────────────────────┬─────────────────────────────────────┘     │
-│                               ▼                                          │
-│  ┌──────────────────────────────────────────────────────────────────┐     │
-│  │                    External dApps / Consumers                     │     │
-│  │  Query: "Is this address a verified AI agent?"                   │     │
-│  └──────────────────────────────────────────────────────────────────┘     │
-│                                                                            │
-│  ┌──────────────────────────────────────────────────────────────────┐     │
-│  │             React Dashboard (Frontend) — Tailwind CSS             │     │
-│  │  Agent List • Agent Detail • Score Charts • Live Monitor          │     │
-│  └──────────────────────────────────────────────────────────────────┘     │
-│                                                                            │
-│  ┌──────────────────────────────────────────────────────────────────┐     │
-│  │  Byreal Ecosystem Integration                                    │     │
-│  │  ├─ pot-verify CLI (ClawHub skill)                               │     │
-│  │  └─ pot-agent-skill (NPM module for Byreal agents)               │     │
-│  └──────────────────────────────────────────────────────────────────┘     │
-└────────────────────────────────────────────────────────────────────────────┘
+Alpha Score = (On-chain × 0.40) + (Entity × 0.20) + (Market × 0.20) + (Social × 0.10)
+
+Where:
+- On-chain: 8-dimension behavioral analysis (timing, gas, contracts, frequency, value, input, temporal, MEV)
+- Entity: Nansen wallet labels and risk classification
+- Market: Allora ML inference cross-verification
+- Social: Elfa AI sentiment and trending correlation
 ```
 
-### Data Flow
+### Scoring Thresholds
 
-```
-Agent Action → Heartbeat → PoT Oracle → 4 Analyzers → ML Model → Score
-                                                                      ↓
-                                                               ERC-8004 on Mantle
-                                                                      ↓
-                                                            "Verified AI Agent" ✅
-```
+| Score | Status | Description |
+|-------|--------|-------------|
+| ≥ 70 | Verified AI Agent | High confidence — auto-verified on-chain |
+| 40-69 | Suspicious | Mixed behavior — needs more data |
+| < 40 | Human | Likely human-operated wallet |
 
 ---
 
-## 📄 Smart Contract
+## Data Sources
+
+### 1. On-chain Behavior (40%)
+
+Analyzes wallet transaction patterns directly from Mantle blocks:
+
+| Dimension | What It Measures | AI Pattern | Human Pattern |
+|-----------|-----------------|------------|---------------|
+| Timing Entropy | Variability of tx intervals | Natural CV (0.3-1.5) | Too regular (<0.1) |
+| Gas Consistency | Variance in gas prices | <15% variance | >60% variance |
+| Contract Diversity | Unique contracts interacted | 10+ unique | <3 contracts |
+| Interaction Frequency | Total tx count | 100+ tx | <20 tx |
+| Value Dispersion | Variety of tx amounts | High diversity | Repeated amounts |
+| Input Complexity | Calldata complexity | 200+ bytes | Simple transfers |
+| Temporal Regularity | Schedule patterns | Variable | Cron-like fixed |
+| MEV Signature | Sandwich/frontrun detection | High back-to-back tx | None |
+
+### 2. Nansen (20%)
+
+Wallet labels and entity classification:
+
+| Label | Score Impact | Description |
+|-------|-------------|-------------|
+| Smart Money + Fund | 70 | Professional/automated trading |
+| Smart Money | 65 | Expert trader (human or AI) |
+| Bot | 85 | Known automated agent |
+| Whale | 40 | Large capital holder |
+| Exchange | 10 | CEX deposit/withdrawal |
+
+### 3. Allora Network (20%)
+
+ML inference for market pattern verification:
+- Cross-references trading patterns against decentralized models
+- Validates if behavior matches known AI/MEV strategies
+- Provides confidence-weighted scoring
+
+### 4. Elfa AI (10%)
+
+Social sentiment and market intelligence:
+- Correlates wallet activity with trending tokens
+- Measures social volume around recent trades
+- Detects coordinated social manipulation
+
+---
+
+## Smart Contract
 
 **Location:** [`contracts/PoTRegistry.sol`](contracts/PoTRegistry.sol)
 
-The core contract deployed on Mantle Network that stores agent verification data on-chain.
+Deployed on Mantle Sepolia at `0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641`.
 
 ### Key Functions
 
 | Function | Description |
 |----------|-------------|
-| `registerAgent(tokenId)` | Register wallet with ERC-8004 token |
-| `submitHeartbeat()` | Periodic agent activity signal |
-| `submitScore(wallet, score)` | Oracle records verified score |
-| `isVerifiedAgent(wallet)` | Public query: "Is this a real AI?" |
+| `verifyAgentDirect(wallet, score)` | Oracle-only: register + verify in one tx |
+| `isVerifiedAgent(wallet)` | Check if wallet is verified AI agent |
 | `getAgentScore(wallet)` | Get current agentic score |
-| `getScoreHistory(wallet)` | Historical score data |
-
-### Thresholds
-| Score Range | Status |
-|-------------|--------|
-| ≥ 70 | ✅ Verified AI Agent |
-| 60–69 | ⏳ Likely AI Agent |
-| 40–59 | ⚠️ Uncertain |
-| < 40 | ❌ Likely Human/Script |
+| `getAllVerifiedAgents()` | List all verified agents |
+| `getTotalVerifiedAgents()` | Count of verified agents |
 
 ### Test Results
 ```
 33 passing (2s)
-  ✓ Agent Registration      (5 tests)
-  ✓ Score Submission        (7 tests)
-  ✓ Verification Threshold  (3 tests)
-  ✓ Heartbeat               (5 tests)
-  ✓ Query Functions         (4 tests)
-  ✓ Admin Functions         (5 tests)
-  ✓ Edge Cases              (4 tests)
 ```
 
 ---
 
-## 🔧 Backend Oracle
+## Backend
 
 **Location:** [`backend/`](backend/)
 
-FastAPI application serving as the PoT Oracle.
+FastAPI application serving as the intelligence oracle.
 
-### Components
+### Project Structure
 
 ```
 backend/
-├── main.py                 # FastAPI app — 7 endpoints
-├── config.py               # Environment configuration
-├── analyzers/
-│   ├── time_entropy.py     # CV-based timing analysis
-│   ├── response_time.py    # Market reaction analysis
-│   ├── decision_pattern.py # Strategy diversity analysis
-│   ├── data_access.py      # Data reading pattern analysis
-│   └── ml_model.py         # Random Forest + Isolation Forest
-├── engine/
-│   ├── scorer.py           # Weighted score aggregator (incl. ML)
-│   └── verifier.py         # Verification threshold logic
-├── blockchain/
-│   ├── mantle_rpc.py       # Mantle network interface
-│   ├── contract_interaction.py  # Smart contract calls
-│   └── event_listener.py   # On-chain event monitoring
-└── models/
-    ├── agent.py            # Pydantic agent models
-    └── scores.py           # Pydantic score models
+├── main.py                      # API server (11 endpoints)
+├── config.py                    # Environment config
+├── cache.py                     # In-memory cache with TTL
+├── database.py                  # SQLite data layer
+├── analyzers/                   # 4 behavioral analyzers + ML
+│   ├── time_entropy.py
+│   ├── response_time.py
+│   ├── decision_pattern.py
+│   ├── data_access.py
+│   └── ml_model.py
+├── scanner/                     # On-chain block scanner
+│   ├── block_scanner.py         # Mantle RPC scanner
+│   └── onchain_analyzer.py      # 8-dimension analysis
+├── integrations/                # External data providers
+│   ├── allora.py                # Allora Network ML
+│   ├── nansen.py                # Nansen wallet labels
+│   └── elfa.py                  # Elfa AI sentiment
+├── engine/                      # Scoring & verification
+│   ├── scorer.py
+│   └── verifier.py
+├── blockchain/                  # Contract interaction
+│   ├── contract_interaction.py
+│   └── event_listener.py
+└── models/                      # Pydantic models
+    ├── agent.py
+    └── scores.py
 ```
 
 ### API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/` | Health check |
+| GET | `/api/v1/health` | Health check + connection status |
 | POST | `/api/v1/heartbeat` | Submit agent action |
-| GET | `/api/v1/score/{wallet}` | Get detailed score |
+| GET | `/api/v1/alpha/{wallet}` | **Alpha Intelligence** — 4-source analysis |
+| GET | `/api/v1/scan/{wallet}` | On-chain behavioral scan |
 | GET | `/api/v1/verify/{wallet}` | Quick verification |
-| GET | `/api/v1/agents` | List all agents |
+| GET | `/api/v1/badge/{wallet}` | **SVG badge** — shareable proof |
+| GET | `/api/v1/agents` | List all analyzed wallets |
+| GET | `/api/v1/score/{wallet}` | Get detailed score |
 | GET | `/api/v1/score-history/{wallet}` | Historical scores |
+| GET | `/api/v1/report/{wallet}` | Plain-text report |
 | POST | `/api/v1/register` | Register new agent |
+| WebSocket | `/api/v1/ws` | Real-time events |
 
 ---
 
-## 🧠 ML Model
-
-**Location:** [`backend/analyzers/ml_model.py`](backend/analyzers/ml_model.py)
-
-### Architecture
-
-```mermaid
-flowchart LR
-    A[Heartbeat Data] --> B[Feature Extractor]
-    B --> C[15 ML Features]
-    C --> D[StandardScaler]
-    D --> E[Random Forest]
-    D --> F[Isolation Forest]
-    E --> G[Voting Classifier]
-    F --> G
-    G --> H[AI/Human/Script<br/>Prediction]
-
-    style A fill:#050508,stroke:#6366f1,color:white
-    style H fill:#10b981,color:white
-```
-
-### Components
-
-| Component | Algorithm | Purpose |
-|-----------|-----------|---------|
-| **Classifier** | Random Forest (200 estimators) | Label: AI / Human / Script |
-| **Anomaly Detector** | Isolation Forest | Detect suspicious patterns |
-| **Scaler** | StandardScaler | Feature normalization |
-
-### Features (15 dimensions)
-
-| # | Feature | Description |
-|---|---------|-------------|
-| 1 | Mean Interval | Average time between actions |
-| 2 | Std Interval | Consistency of timing |
-| 3 | CV Interval | Coefficient of variation |
-| 4 | Unique Actions | Action type diversity |
-| 5 | Unique Assets | Asset diversity |
-| 6 | Unique Strategies | Strategy diversity |
-| 7 | Mean Response Time | Reaction speed |
-| 8 | Std Response Time | Response consistency |
-| 9 | Trade Size CV | Amount variation |
-| 10 | Frequency | Actions per hour |
-| 11 | Action Entropy | Shannon entropy of actions |
-| 12 | Asset Entropy | Shannon entropy of assets |
-| 13 | Strategy Entropy | Shannon entropy of strategies |
-| 14 | Market Ratio | Percentage of market-driven actions |
-| 15 | Night Ratio | Activity during night hours |
-
-### Training
-
-```bash
-cd backend
-python train_model.py
-# → Generates synthetic data, trains model, saves to backend/models/
-```
-
----
-
-## 🖥 Frontend Dashboard
+## Frontend
 
 **Location:** [`frontend/`](frontend/)
 
@@ -336,31 +260,24 @@ React 18 application with Tailwind CSS 4.
 
 ### Pages
 
-| Page | Route | Description |
-|------|-------|-------------|
-| **Landing** | `/` | Hero section with project overview |
-| **Dashboard** | `/dashboard` | Stats, agent list, search |
-| **Verify** | `/verify` | Wallet verification tool |
-| **Monitor** | `/monitor` | Live heartbeat feed |
-| **Agent Detail** | `/agent/:address` | Full analysis breakdown |
+| Page | Description |
+|------|-------------|
+| **Landing** | Product overview + API quick start |
+| **Dashboard** | Stats, architecture diagram, wallet list |
+| **Alpha Intel** | Multi-source intelligence analysis |
+| **Leaderboard** | Ranked wallets by alpha score |
+| **Analytics** | Charts and statistics |
+| **Activity Log** | Live WebSocket events |
+| **API Reference** | Endpoint documentation |
 
-### Component Hierarchy
+### Features
 
-```mermaid
-flowchart TB
-    App --> Landing
-    App --> Dashboard
-    Dashboard --> StatsGrid
-    Dashboard --> AgentList
-    AgentList --> AgentCard
-    App --> VerifyView
-    App --> MonitorView
-    AgentDetail --> ScoreChart
-    AgentDetail --> VerificationBadge
-
-    style App fill:#050508,stroke:#00d395,color:white
-    style Dashboard fill:#050508,stroke:#3b82f6,color:white
-```
+- **Command Palette** (Cmd+K) — quick navigation
+- **Animated Numbers** — smooth count-up effects
+- **Progress Bars** — animated score visualization
+- **Toasts** — real-time notifications
+- **Skeleton Loaders** — smooth loading states
+- **Dark Theme** — single theme (Mantle-inspired)
 
 ### Tech
 
@@ -368,56 +285,19 @@ flowchart TB
 |---------|---------|
 | React 18 | UI framework |
 | Tailwind CSS 4 | Utility-first styling |
-| Recharts | Score history charts |
+| Recharts | Data visualization |
 | Axios | API calls |
-| Vite | Build tool |
+| Vite 5 | Build tool |
 
 ---
 
-## 🔗 Byreal CLI Integration
-
-**Location:** [`skills/pot-verify/`](skills/pot-verify/) · [`byreal-poc/`](byreal-poc/)
-
-### ClawHub Skill: `pot-verify`
-
-```bash
-# Install
-npx clawhub install pot-verify
-
-# Usage
-pot-verify check 0x...     # Quick verification
-pot-verify analyze 0x...   # Full analysis with breakdown
-pot-verify me              # Self-verification for agents
-```
-
-### NPM Module: `pot-agent-skill`
-
-```javascript
-const pot = require('pot-agent-skill');
-
-// Initialize
-pot.init({ wallet: '0x...', oracleUrl: '...' });
-
-// Submit heartbeat
-await pot.heartbeat({ action: 'swap', asset: 'mETH' });
-
-// Check verification
-const verified = await pot.isVerified(); // true/false
-
-// Get SVG badge
-const badge = await pot.getBadge(); // "VERIFIED AI" badge
-```
-
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js** v18+ (v26.1.0 tested)
-- **Python** 3.12+
-- **npm** 11+
-- Wallet with test MNT on [Mantle Sepolia Testnet](https://faucet.sepolia.mantle.xyz)
+- Node.js v18+
+- Python 3.12+
+- npm 11+
 
 ### Quick Start
 
@@ -426,230 +306,124 @@ const badge = await pot.getBadge(); // "VERIFIED AI" badge
 git clone https://github.com/antidumpalways/Proof-Of-Turing.git
 cd Proof-Of-Turing
 
-# 2. Install Smart Contract deps
-npm install
-
-# 3. Install Backend deps
+# 2. Install backend deps
 pip install -r backend/requirements.txt
 
-# 4. Install Frontend deps
+# 3. Install frontend deps
 cd frontend && npm install && cd ..
 
-# 5. Train ML model
-cd backend && python train_model.py && cd ..
-
-# 6. Deploy contracts
-npx hardhat run scripts/deploy.js --network mantleTestnet
-
-# 7. Start backend (terminal 1)
+# 4. Start backend
 cd backend && uvicorn main:app --reload --port 8000
 
-# 8. Start frontend (terminal 2)
+# 5. Start frontend (new terminal)
 cd frontend && npm run dev
 
-# 9. Run mock agent demo (terminal 3)
-python scripts/mock-agent.py --type both --count 15
+# 6. Open http://localhost:3000
+```
+
+### Environment Variables
+
+```env
+# .env (already configured for Mantle Sepolia)
+POT_REGISTRY_ADDRESS=0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641
+ORACLE_PRIVATE_KEY=your_key
+ORACLE_ADDRESS=your_address
+MANTLE_RPC_URL=https://rpc.sepolia.mantle.xyz
+
+# Optional API keys (for enhanced scoring)
+ALLORA_API_KEY=
+NANSEN_API_KEY=
+ELFA_API_KEY=
 ```
 
 ---
 
-## 📊 API Reference
+## API Reference
 
-### Verify a Wallet
+### Alpha Intelligence (4-source analysis)
 
 ```bash
-curl http://localhost:8000/api/v1/verify/0x...
+curl http://localhost:8000/api/v1/alpha/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641
 ```
 
 ```json
 {
-  "wallet": "0x...",
-  "is_verified_agent": true,
-  "score": 87,
-  "verdict": "PASSED",
-  "badge": "✅ Verified AI Agent",
-  "heartbeats_count": 15
-}
-```
-
-### Get Detailed Score
-
-```bash
-curl http://localhost:8000/api/v1/score/0x...
-```
-
-```json
-{
-  "off_chain": {
-    "score": 84,
-    "status": "verified_agent",
-    "components": {
-      "time_entropy": { "score": 86, "confidence": "high" },
-      "response_time": { "score": 82, "confidence": "high" },
-      "decision_pattern": { "score": 94, "confidence": "high" },
-      "data_access": { "score": 95, "confidence": "high" },
-      "ml_classifier": { "score": 61, "confidence": "high" }
-    }
+  "wallet": "0x8c13bb7d29feb35ed4adb6f8ab031222b1711641",
+  "alpha_score": 27,
+  "threshold": 70,
+  "is_verified_agent": false,
+  "status": "human",
+  "confidence": "very_low",
+  "percentile": 5,
+  "anomalies": [],
+  "behavior": {
+    "type": "mixed",
+    "description": "Mixed human/bot behavior"
   },
-  "on_chain": { "score": 84, "verified": true }
+  "score_breakdown": {
+    "onchain_behavior": { "score": 29, "weight": 0.40 },
+    "entity_labels": { "score": 50, "weight": 0.20 },
+    "market_verification": { "score": 0, "weight": 0.20 },
+    "social_context": { "score": 50, "weight": 0.10 }
+  },
+  "sources": {
+    "mantle_rpc": true,
+    "nansen": false,
+    "allora": false,
+    "elfa": false
+  }
 }
+```
+
+### On-chain Scan
+
+```bash
+curl http://localhost:8000/api/v1/scan/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641
+```
+
+### SVG Badge
+
+```bash
+curl http://localhost:8000/api/v1/badge/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641 > badge.svg
 ```
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
-# Smart contracts
+# Smart contracts (33 tests)
 npx hardhat test
 
-# Python analyzers (when implemented)
-cd backend && python -m pytest
+# Backend health check
+curl http://localhost:8000/api/v1/health
 
-# Byreal CLI skill
-node skills/pot-verify/bin/pot-verify.js --help
+# Alpha scan any wallet
+curl http://localhost:8000/api/v1/alpha/0xYourWallet
 
-# Mock agent
-python scripts/mock-agent.py --type both --count 10
+# View SVG badge
+curl http://localhost:8000/api/v1/badge/0xYourWallet
 ```
 
 ---
 
-## 📦 Deployment
+## Tech Stack
 
-### Mantle Sepolia Testnet
-
-```bash
-npx hardhat run scripts/deploy.js --network mantleTestnet
-```
-
-### Mantle Mainnet
-
-```bash
-# Update .env with mainnet RPC and private key
-npx hardhat run scripts/deploy.js --network mantleTestnet
-```
-
-### Contract Verification
-
-```bash
-npx hardhat verify --network mantleTestnet <CONTRACT_ADDRESS>
-```
+| Layer | Technology |
+|-------|-----------|
+| **Smart Contract** | Solidity ^0.8.20, Hardhat, Mantle |
+| **Backend** | Python 3.12, FastAPI, web3.py |
+| **ML** | scikit-learn, numpy, pandas |
+| **Data Sources** | Nansen, Allora Network, Elfa AI |
+| **Frontend** | React 18, Tailwind CSS 4, Vite 5 |
+| **Database** | SQLite (WAL mode) |
 
 ---
 
-## 🛠 Tech Stack
+## License
 
-### Smart Contract
-| Technology | |
-|------------|---|
-| Language | Solidity ^0.8.20 |
-| Framework | Hardhat 2.28 |
-| Network | Mantle (Sepolia Testnet / Mainnet) |
-| Standard | ERC-8004 (Agent Identity) |
-
-### Backend
-| Technology | |
-|------------|---|
-| Runtime | Python 3.12 |
-| Framework | FastAPI 0.110 |
-| ML | scikit-learn (Random Forest, Isolation Forest) |
-| Data | numpy, pandas |
-| Blockchain | web3.py 6.x |
-
-### Frontend
-| Technology | |
-|------------|---|
-| Framework | React 18 |
-| Styling | Tailwind CSS 4 |
-| Charts | Recharts |
-| Build | Vite 5 |
-
-### Integration
-| Technology | |
-|------------|---|
-| CLI Byreal | ClawHub skill (`pot-verify`) |
-| Byreal Agents | NPM module (`pot-agent-skill`) |
-| Version Control | Git + GitHub |
-
----
-
-## 📁 Project Structure
-
-```
-proof-of-turing/
-├── contracts/                     # Solidity Smart Contracts
-│   ├── PoTRegistry.sol           # Main verification contract
-│   ├── interfaces/IERC8004.sol   # ERC-8004 standard
-│   └── mock/MockERC8004.sol      # Mock for testing
-│
-├── backend/                       # Python FastAPI Oracle
-│   ├── main.py                   # API server (7 endpoints)
-│   ├── config.py                 # Environment config
-│   ├── train_model.py            # ML training pipeline
-│   ├── analyzers/                # 4 analyzers + ML model
-│   ├── engine/                   # Scoring & verification
-│   ├── blockchain/               # Mantle interaction
-│   └── models/                   # Pydantic data models
-│
-├── frontend/                      # React Dashboard
-│   ├── src/
-│   │   ├── App.jsx              # Main SPA
-│   │   ├── App.css              # Tailwind styles
-│   │   ├── components/          # 6 UI components
-│   │   └── hooks/               # Custom React hooks
-│   └── vite.config.js
-│
-├── skills/                        # ClawHub Skills
-│   └── pot-verify/               # PoT CLI skill
-│       ├── SKILL.md              # Skill manifest
-│       └── bin/pot-verify.js     # CLI entry point
-│
-├── byreal-poc/                    # Byreal Integration
-│   ├── pot-agent-skill/          # NPM module
-│   │   ├── src/index.js          # Heartbeat, verify, badge
-│   │   └── test/test-skill.js    # Unit tests
-│   └── demo/byreal-agent-demo.js # Demo script
-│
-├── scripts/                       # Utility scripts
-│   ├── deploy.js                 # Hardhat deployment
-│   └── mock-agent.py             # AI vs Script simulator
-│
-├── test/                          # Contract tests
-│   └── PoTRegistry.test.js       # 33 tests
-│
-├── plans/                         # Documentation
-│   ├── hackathon-winning-ideas.md
-│   ├── pot-technical-spec.md
-│   └── winning-strategy.md
-│
-└── README.md                      # This file
-```
-
----
-
-## 🏆 Hackathon Scoring Alignment
-
-| Dimension | Weight | How PoT Excels |
-|-----------|--------|----------------|
-| **Technical Depth** | 30% | AI × on-chain integration: 4 analyzers + ML model + smart contract |
-| **Innovation** | 25% | First "Proof-of-Agenthood" protocol — inverse of Worldcoin |
-| **Mantle Ecosystem** | 25% | ERC-8004 native, Byreal CLI integration, deployed on Mantle |
-| **Product Completeness** | 20% | Working dashboard, CLI tool, NPM module, demo script |
-
-### Target Prizes
-- 🥇 **AI DevTools** — infrastructure tool for agent verification
-- 🥇 **Agentic Economy** (Byreal) — `pot-verify` skill for Byreal agents
-- 🎨 **Best UI/UX Award** — modern dashboard
-- 📦 **20 Project Deployment Award** — deploy on Mantle
-- 🗳️ **Community Vote** — shareable verification badges
-
----
-
-## 📄 License
-
-MIT — Built for [The Turing Test Hackathon 2026](https://dorahacks.io) by Mantle
+MIT — Built for [Turing Test Hackathon 2026](https://dorahacks.io) by Mantle
 
 <div align="center">
-  <sub>Built with ❤️ for the AI Agentic Future on Mantle</sub>
+  <sub>Built for the Alpha & Data Track</sub>
 </div>

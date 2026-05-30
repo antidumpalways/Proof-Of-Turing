@@ -28,10 +28,6 @@ class Settings:
     POT_REGISTRY_ADDRESS: str = os.getenv(
         "POT_REGISTRY_ADDRESS", ""
     )
-    ERC8004_ADDRESS: str = os.getenv(
-        "ERC8004_ADDRESS", ""
-    )
-
     # Oracle Wallet
     ORACLE_PRIVATE_KEY: str = os.getenv("ORACLE_PRIVATE_KEY", "")
     ORACLE_ADDRESS: str = os.getenv("ORACLE_ADDRESS", "")
@@ -52,9 +48,18 @@ class Settings:
     # Signature Verification
     VERIFY_SIGNATURE: bool = os.getenv("VERIFY_SIGNATURE", "false").lower() == "true"
 
-    # Redis (optional, for caching)
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    USE_REDIS: bool = os.getenv("USE_REDIS", "false").lower() == "true"
+    # Alpha Intelligence — Data Sources
+    ALLORA_API_KEY: str = os.getenv("ALLORA_API_KEY", "")
+    NANSEN_API_KEY: str = os.getenv("NANSEN_API_KEY", "")
+    ELFA_API_KEY: str = os.getenv("ELFA_API_KEY", "")
+
+    # Alpha scoring
+    ALPHA_SCORE_THRESHOLD: int = 70
+
+    # Data fresh
+    SCAN_CACHE_TTL: int = int(os.getenv("SCAN_CACHE_TTL", "60"))
+    LABEL_CACHE_TTL: int = int(os.getenv("LABEL_CACHE_TTL", "300"))
+    INFERENCE_CACHE_TTL: int = int(os.getenv("INFERENCE_CACHE_TTL", "120"))
 
 
 settings = Settings()

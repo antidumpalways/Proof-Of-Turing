@@ -83,9 +83,9 @@ echo  WebSocket:    ws://localhost:8000/api/v1/ws
 echo ============================================================
 echo.
 echo  CLI commands to try:
-echo    node skills/pot-verify/bin/pot-verify.js me 0xAI_XXXX
-echo    node skills/pot-verify/bin/pot-verify.js report 0xAI_XXXX
-echo    node skills/pot-verify/bin/pot-verify.js status
+echo    curl http://localhost:8000/api/v1/health
+echo    curl http://localhost:8000/api/v1/alpha/0xYourWallet
+echo    curl http://localhost:8000/api/v1/scan/0xYourWallet
 echo.
 echo  Press any key to stop all services...
 pause >nul

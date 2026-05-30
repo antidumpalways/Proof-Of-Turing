@@ -115,17 +115,17 @@ export default function LiveMonitor({ onVerify }) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Live Heartbeat Monitor</h2>
-          <p className="text-xs text-[var(--text-muted)] mt-1">Real-time agent activity on the Mantle network</p>
+          <h2 className="font-serif text-xl font-[400] text-[var(--text-primary)]">Live Heartbeat Monitor</h2>
+          <p className="font-serif italic text-xs text-[var(--text-muted)] mt-1">Real-time agent activity on the Mantle network</p>
         </div>
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-medium ${
           wsConnected
-            ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400/80'
+            ? 'bg-[var(--color-cofounder-blue)]/10 border-[var(--color-cofounder-blue)]/20 text-[var(--color-cofounder-blue)]'
             : 'bg-amber-500/5 border-amber-500/10 text-amber-400/80'
         }`}>
           <span className="relative flex w-2 h-2">
-            {wsConnected && <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />}
-            <span className={`relative rounded-full w-2 h-2 ${wsConnected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+            {wsConnected && <span className="absolute inset-0 rounded-full bg-[var(--color-action-azure)] animate-ping opacity-40" />}
+            <span className={`relative rounded-full w-2 h-2 ${wsConnected ? 'bg-[var(--color-action-azure)]' : 'bg-amber-400'}`} />
           </span>
           {wsConnected ? 'Live' : 'Polling'}
         </div>
@@ -146,26 +146,26 @@ export default function LiveMonitor({ onVerify }) {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             {/* Pulse animation */}
             <div className="relative w-12 h-12 mb-4">
-              <div className="absolute inset-0 rounded-2xl bg-emerald-500/5 animate-pulse" />
-              <div className="absolute inset-2 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-emerald-400/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="absolute inset-0 rounded-2xl bg-[var(--color-cofounder-blue)]/10 animate-pulse" />
+              <div className="absolute inset-2 rounded-xl bg-[var(--color-cofounder-blue)]/15 flex items-center justify-center">
+                <svg className="w-5 h-5 text-[var(--color-cofounder-blue)]/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                 </svg>
               </div>
             </div>
-            <p className="text-sm font-medium text-[var(--text-muted)]">Waiting for heartbeats...</p>
-            <p className="text-xs text-[var(--text-faint)] mt-1">Connect the backend oracle to see live events</p>
+            <p className="font-serif italic text-sm font-medium text-[var(--text-muted)]">Waiting for heartbeats...</p>
+            <p className="font-serif italic text-xs text-[var(--text-faint)] mt-1">Connect the backend oracle to see live events</p>
           </div>
         ) : (
           <div className="p-1">
             {events.map((event, i) => {
               const scoreColor = event.score >= 70
-                ? 'text-emerald-400'
+                ? 'text-[var(--color-action-azure)]'
                 : event.score >= 40
                   ? 'text-amber-400'
                   : 'text-red-400'
               const scoreBg = event.score >= 70
-                ? 'bg-emerald-500/5'
+                ? 'bg-[var(--color-cofounder-blue)]/10'
                 : event.score >= 40
                   ? 'bg-amber-500/5'
                   : 'bg-red-500/5'
@@ -197,7 +197,7 @@ export default function LiveMonitor({ onVerify }) {
       {/* Legend */}
       <div className="flex items-center gap-5 text-[10px] text-[var(--text-muted)] font-mono">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="w-2 h-2 rounded-full bg-[var(--color-action-azure)]" />
           Verified (&ge;70)
         </span>
         <span className="flex items-center gap-1.5">

@@ -14,7 +14,7 @@ export function usePotData() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await axios.get('/')
+      const res = await axios.get(`${API_BASE}/health`)
       setOracleStatus(res.data)
       return res.data
     } catch {
@@ -51,6 +51,16 @@ export function usePotData() {
     return res.data
   }, [])
 
+  const scanWallet = useCallback(async (wallet) => {
+    const res = await axios.get(`${API_BASE}/scan/${wallet}`, { timeout: 120000 })
+    return res.data
+  }, [])
+
+  const alphaIntelligence = useCallback(async (wallet) => {
+    const res = await axios.get(`${API_BASE}/alpha/${wallet}`, { timeout: 120000 })
+    return res.data
+  }, [])
+
   const submitHeartbeat = useCallback(async (heartbeatData) => {
     const res = await axios.post(`${API_BASE}/heartbeat`, heartbeatData)
     return res.data
@@ -82,6 +92,8 @@ export function usePotData() {
     setPage,
     getAgentScore,
     verifyAgent,
+    scanWallet,
+    alphaIntelligence,
     submitHeartbeat,
     getScoreHistory,
     fetchStatus,

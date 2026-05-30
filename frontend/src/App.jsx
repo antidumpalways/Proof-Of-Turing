@@ -1,740 +1,595 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { usePotData } from './hooks/usePotData'
-import AgentCard from './components/AgentCard'
 import AgentList from './components/AgentList'
-import ScoreChart from './components/ScoreChart'
 import VerificationBadge from './components/VerificationBadge'
 import LiveMonitor from './components/LiveMonitor'
 import Sidebar from './components/Sidebar'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider, useToast } from './components/Toast'
-import { ThemeProvider } from './components/ThemeContext'
+import CommandPalette from './components/CommandPalette'
+import ArchitectureDiagram from './components/ArchitectureDiagram'
+import { AnimatedNumber, ProgressBar, FadeIn, Stagger, Tooltip } from './components/Motion'
 import Leaderboard from './components/Leaderboard'
 import Analytics from './components/Analytics'
-import Onboarding from './components/Onboarding'
+import Guide from './components/Onboarding'
 
 export default function App() {
   const [page, setPage] = useState('landing')
-
   if (page === 'landing') return <Landing onEnter={() => setPage('app')} />
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <ErrorBoundary>
-          <DashboardApp onHome={() => setPage('landing')} />
-        </ErrorBoundary>
-      </ToastProvider>
-    </ThemeProvider>
+    <ToastProvider>
+      <ErrorBoundary>
+        <AppShell onHome={() => setPage('landing')} />
+      </ErrorBoundary>
+    </ToastProvider>
   )
 }
 
 function Landing({ onEnter }) {
   return (
-    <div className="relative min-h-screen bg-[var(--bg-body)] text-white font-sans overflow-hidden">
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)
-          `,
-          backgroundSize: '48px 48px',
-        }}
-      />
-      <div className="fixed inset-0 bg-gradient-radial from-blue-500/4 via-transparent to-transparent pointer-events-none" />
-      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-emerald-500/3 rounded-full blur-[120px] pointer-events-none animate-pulse" />
-      <div className="fixed bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/3 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '2s' }} />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-8 pb-24">
-        <nav className="flex items-center justify-between mb-36">
-          <div className="flex items-center gap-3">
-            <Logo />
-            <span className="font-semibold text-sm text-[var(--text-primary)]">Proof of Turing</span>
+    <div className="min-h-screen bg-[var(--bg-body)] text-white font-sans">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-6 border-b border-[var(--border)]" style={{ background: 'rgba(10, 10, 15, 0.8)', backdropFilter: 'blur(20px)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #65B3AE, #4a9d99)' }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
           </div>
-          <button
-            onClick={onEnter}
-            className="px-5 py-2.5 rounded-full bg-white text-black text-xs font-semibold
-              hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--overlay)]
-              active:scale-[0.97] transition-all duration-200"
-          >
-            Launch App
-          </button>
-        </nav>
-
-        <div className="text-center mb-32">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card-hover)] border border-[var(--border)] text-[11px] text-[var(--text-secondary)] font-medium mb-10
-            hover:bg-white/[0.05] transition-all duration-300">
-            <span className="relative flex w-2 h-2">
-              <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />
-              <span className="relative rounded-full w-2 h-2 bg-emerald-400" />
-            </span>
-            Deployed on Mantle Network
-          </div>
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tight leading-[0.92] mb-6">
-            Prove your agent
-            <br />
-            <span className="bg-gradient-to-r from-blue-300 via-cyan-200 to-emerald-200 bg-clip-text text-transparent">
-              is not a human
-            </span>
-          </h1>
-          <p className="text-base md:text-lg text-[var(--text-muted)] max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
-            Proof-of-Turing is an inverse captcha for Web3 — it verifies
-            whether a wallet is operated by an autonomous AI agent or a
-            human running scripts through four-dimensional behavioral analysis.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <button
-              onClick={onEnter}
-              className="group px-8 py-3.5 rounded-full bg-white text-black font-semibold text-sm
-                hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[var(--overlay)]
-                active:scale-[0.97] transition-all duration-200"
-            >
-              Enter Dashboard
-            </button>
-            <button
-              className="px-8 py-3.5 rounded-full bg-[var(--bg-card-hover)] border border-[var(--border)] text-[var(--text-secondary)] font-medium text-sm
-                hover:bg-white/[0.06] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] hover:-translate-y-0.5
-                active:scale-[0.97] transition-all duration-200"
-            >
-              Read the Paper
-            </button>
-          </div>
+          <span className="text-sm font-semibold">Proof of Turing</span>
         </div>
-
+        <div className="flex items-center gap-4">
+          <a href="https://github.com/antidumpalways/Proof-Of-Turing" target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors">GitHub</a>
+          <button onClick={onEnter} className="px-4 py-1.5 rounded-md text-white text-xs font-semibold transition-colors" style={{ background: 'linear-gradient(135deg, #65B3AE, #4a9d99)' }}>Open Dashboard</button>
+        </div>
+      </nav>
+      <div className="pt-32 pb-24 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[3px] font-semibold mb-4">How it works</div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[var(--text-primary)]">
-              Four dimensions of agentic analysis
-            </h2>
-            <p className="text-sm text-[var(--text-faint)] mt-3 max-w-md mx-auto">
-              Our oracle evaluates AI agents across four independent dimensions to determine authenticity
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <FadeIn>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-mono text-white/50 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse"></span>
+              Alpha & Data Track — Turing Test Hackathon 2026
+            </div>
+          </FadeIn>
+          <FadeIn delay={100}>
+            <h1 className="text-[clamp(40px,6vw,64px)] font-bold leading-[1.1] tracking-tight mb-6">
+              Multi-source intelligence<br /><span style={{ color: '#65B3AE' }}>for on-chain agents</span>
+            </h1>
+          </FadeIn>
+      <FadeIn delay={150}>
+        <ArchitectureDiagram />
+      </FadeIn>
+
+      <FadeIn delay={200}>
+            <p className="text-lg text-white/50 max-w-2xl leading-relaxed mb-10">Detect and verify AI agents on Mantle using behavioral analysis, Nansen labels, Allora ML inference, and Elfa social sentiment.</p>
+          </FadeIn>
+          <FadeIn delay={300}>
+            <div className="flex items-center gap-3 mb-16">
+              <button onClick={onEnter} className="px-5 py-2.5 rounded-md text-white text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all" style={{ background: 'linear-gradient(135deg, #65B3AE, #4a9d99)' }}>Open Dashboard</button>
+              <a href="https://github.com/antidumpalways/Proof-Of-Turing" target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-md bg-white/5 text-white/70 text-sm font-medium border border-white/10 hover:bg-white/10 transition-colors">View Source</a>
+            </div>
+          </FadeIn>
+          <Stagger stagger={80} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { num: '01', title: 'Time Entropy', desc: 'Measures natural vs mechanical timing patterns in agent actions.' },
-              { num: '02', title: 'Response Time', desc: 'Analyzes reaction speed to market events — AI needs time to think.' },
-              { num: '03', title: 'Decision Pattern', desc: 'Evaluates strategy diversity — real AI adapts, scripts repeat.' },
-              { num: '04', title: 'Data Access', desc: 'Checks if agent reads on-chain data before making decisions.' },
-            ].map((f, i) => (
-              <div
-                key={i}
-                className="group relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6
-                  hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-1
-                  transition-all duration-300 ease-out"
-              >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                <div className="relative">
-                  <div className="text-[10px] font-mono text-[var(--text-faint)] mb-4 font-semibold">{f.num}</div>
-                  <div className="font-semibold text-sm mb-2 text-[var(--text-primary)] group-hover:text-[var(--text-primary)] transition-colors duration-200">{f.title}</div>
-                  <div className="text-xs text-[var(--text-muted)] leading-relaxed">{f.desc}</div>
-                </div>
+              { label: 'On-chain Behavior', desc: 'Timing, gas, contract diversity', color: '#58a6ff' },
+              { label: 'Entity Labels', desc: 'Nansen Smart Money, Fund, Trader', color: '#a371f7' },
+              { label: 'Market Verification', desc: 'Allora ML inference patterns', color: '#d29922' },
+              { label: 'Social Context', desc: 'Elfa sentiment & social volume', color: '#34d399' },
+            ].map((s, i) => (
+              <div key={i} className="rounded-lg bg-white/[0.02] border border-white/[0.06] p-4 hover:bg-white/[0.04] hover:border-white/[0.12] hover:scale-[1.02] transition-all duration-300 cursor-default">
+                <div className="w-2 h-2 rounded-full mb-3" style={{ backgroundColor: s.color }} />
+                <div className="text-sm font-semibold text-white/90 mb-1">{s.label}</div>
+                <div className="text-xs text-white/30">{s.desc}</div>
               </div>
             ))}
-          </div>
-        </div>
-
-        <div className="text-center mt-32">
-          <div className="text-[10px] text-[var(--text-faint)] font-mono">
-            Built for Mantle Network &middot; EIP-8004 Compatible
-          </div>
+          </Stagger>
         </div>
       </div>
     </div>
   )
 }
 
-function DashboardApp({ onHome }) {
+function AppShell({ onHome }) {
   const addToast = useToast()
-
-  const {
-    agents, totalAgents, loading, error, page, totalPages,
-    oracleStatus, getAgentScore, verifyAgent, getScoreHistory,
-    fetchStatus, setPage: setPageHook,
-  } = usePotData()
-
+  const { agents, totalAgents, loading, error, page, totalPages, oracleStatus, getAgentScore, scanWallet, alphaIntelligence, getScoreHistory, setPage: setPageHook } = usePotData()
   const [nav, setNav] = useState('dashboard')
   const [selected, setSelected] = useState(null)
   const [detail, setDetail] = useState(null)
-  const [history, setHistory] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
-  const [verifyResult, setVerifyResult] = useState(null)
-  const [verifyLoading, setVerifyLoading] = useState(false)
+  const [scanResult, setScanResult] = useState(null)
+  const [scanLoading, setScanLoading] = useState(false)
+  const [alphaResult, setAlphaResult] = useState(null)
+  const [alphaLoading, setAlphaLoading] = useState(false)
+  const [cmdOpen, setCmdOpen] = useState(false)
 
   const stats = {
     total: totalAgents,
     verified: agents.filter(a => a.is_verified).length,
-    avgScore: agents.length
-      ? Math.round(agents.reduce((s, a) => s + (a.agentic_score || 0), 0) / agents.length)
-      : 0,
+    avgScore: agents.length ? Math.round(agents.reduce((s, a) => s + (a.agentic_score || 0), 0) / agents.length) : 0,
     heartbeats: agents.reduce((s, a) => s + (a.heartbeats_count || 0), 0),
   }
 
-  const handleAgentClick = useCallback(async (agent) => {
-    setSelected(agent)
-    setDetailLoading(true)
-    setVerifyResult(null)
-    addToast('Loading agent details...', 'info')
-    try {
-      const [d, h] = await Promise.all([
-        getAgentScore(agent.wallet),
-        getScoreHistory(agent.wallet),
-      ])
-      setDetail(d)
-      setHistory(h)
-    } catch (e) {
-      setDetail({ error: e.message })
-      addToast(`Failed to load agent: ${e.message}`, 'error', 5000)
-    } finally {
-      setDetailLoading(false)
-    }
-  }, [getAgentScore, getScoreHistory, addToast])
+  const cmdActions = [
+    { label: 'Go to Dashboard', icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>, action: () => setNav('dashboard'), shortcut: 'G D' },
+    { label: 'Go to Alpha Intel', icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>, action: () => setNav('alpha'), shortcut: 'G A' },
+    { label: 'Go to Leaderboard', icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 9H4.5a2.5 2.5 0 010-5H6M18 9h1.5a2.5 2.5 0 000-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0012 0V2z" /></svg>, action: () => setNav('leaderboard'), shortcut: 'G L' },
+    { label: 'Go to Analytics', icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>, action: () => setNav('analytics'), shortcut: 'G T' },
+    { label: 'Go to Activity Log', icon: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>, action: () => setNav('monitor'), shortcut: 'G M' },
+  ]
 
-  const handleVerify = useCallback(async (address) => {
-    if (!address?.length) return
-    setVerifyLoading(true)
-    setVerifyResult(null)
-    setSelected(null)
-    addToast('Verifying agent...', 'info')
-    try {
-      const res = await verifyAgent(address)
-      setVerifyResult(res)
-      setNav('verify')
-      if (res.is_verified_agent) {
-        addToast('Agent verified successfully!', 'success')
-      } else {
-        addToast('Agent verification completed', 'warning')
-      }
-    } catch (e) {
-      setVerifyResult({ error: e.message })
-      addToast(`Verification failed: ${e.message}`, 'error', 5000)
-    } finally {
-      setVerifyLoading(false)
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCmdOpen(o => !o) }
     }
-  }, [verifyAgent, addToast])
-
-  const handleBack = useCallback(() => {
-    setSelected(null); setDetail(null); setHistory(null); setVerifyResult(null)
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  const handleNavChange = useCallback((id) => {
-    handleBack()
-    setNav(id)
-  }, [handleBack])
+  const handleAgentClick = useCallback(async (agent) => {
+    setSelected(agent); setDetailLoading(true)
+    try {
+      const [d, h] = await Promise.all([getAgentScore(agent.wallet), getScoreHistory(agent.wallet)])
+      setDetail({ ...d, history: h })
+    } catch (e) { setDetail({ error: e.message }) }
+    finally { setDetailLoading(false) }
+  }, [getAgentScore, getScoreHistory])
+
+  const handleScan = useCallback(async (address) => {
+    setScanLoading(true); setScanResult(null); setAlphaResult(null)
+    try {
+      const res = await scanWallet(address); setScanResult(res)
+      addToast(`Scan: ${res.analysis?.is_verified_agent ? 'AI detected' : 'Likely human'}`, res.analysis?.is_verified_agent ? 'success' : 'info')
+    } catch (e) { setScanResult({ error: e.message }); addToast('Scan failed', 'error') }
+    finally { setScanLoading(false) }
+  }, [scanWallet, addToast])
+
+  const handleAlphaScan = useCallback(async (address) => {
+    setAlphaLoading(true); setAlphaResult(null); setScanResult(null)
+    try {
+      const res = await alphaIntelligence(address); setAlphaResult(res)
+      addToast(`Alpha: score ${res.alpha_score}`, 'success')
+    } catch (e) { setAlphaResult({ error: e.message }); addToast('Alpha failed', 'error') }
+    finally { setAlphaLoading(false) }
+  }, [alphaIntelligence, addToast])
 
   const isOnline = oracleStatus?.status === 'running'
-
-  // Toast when oracle goes offline
-  const prevOnline = React.useRef(null)
-  React.useEffect(() => {
-    if (prevOnline.current !== null && prevOnline.current !== isOnline) {
-      addToast(isOnline ? 'Oracle connected' : 'Oracle disconnected', isOnline ? 'success' : 'error')
-    }
-    prevOnline.current = isOnline
-  }, [isOnline, addToast])
+  const navLabel = { dashboard: 'Dashboard', alpha: 'Alpha Intel', leaderboard: 'Leaderboard', analytics: 'Analytics', monitor: 'Activity Log', guide: 'API Reference' }
 
   const renderContent = () => {
-    if (selected) {
-      return (
-        <AgentDetail
-          agent={selected}
-          detail={detail}
-          history={history}
-          loading={detailLoading}
-          onBack={handleBack}
-        />
-      )
-    }
+    if (selected) return <AgentDetail agent={selected} detail={detail} loading={detailLoading} onBack={() => { setSelected(null); setDetail(null); setScanResult(null); setAlphaResult(null) }} />
     switch (nav) {
-      case 'dashboard':
-        return (
-          <DashboardView
-            agents={agents}
-            loading={loading}
-            error={error}
-            page={page}
-            totalPages={totalPages}
-            totalAgents={totalAgents}
-            stats={stats}
-            onPageChange={setPageHook}
-            onAgentClick={handleAgentClick}
-            onVerify={handleVerify}
-          />
-        )
-      case 'leaderboard':
-        return <Leaderboard onAgentClick={handleAgentClick} />
-      case 'analytics':
-        return <Analytics />
-      case 'verify':
-        return (
-          <VerifyView
-            result={verifyResult}
-            loading={verifyLoading}
-            onVerify={handleVerify}
-          />
-        )
-      case 'monitor':
-        return <MonitorView />
-      case 'onboarding':
-        return <Onboarding />
-      default:
-        return null
+      case 'dashboard': return <DashboardView agents={agents} loading={loading} error={error} page={page} totalPages={totalPages} totalAgents={totalAgents} stats={stats} onPageChange={setPageHook} onAgentClick={handleAgentClick} onScan={handleScan} onAlphaScan={handleAlphaScan} />
+      case 'alpha': return <AlphaIntelView scanResult={scanResult} scanLoading={scanLoading} onScan={handleScan} alphaResult={alphaResult} alphaLoading={alphaLoading} onAlphaScan={handleAlphaScan} />
+      case 'leaderboard': return <Leaderboard onAgentClick={handleAgentClick} />
+      case 'analytics': return <Analytics />
+      case 'monitor': return <LiveMonitor />
+      case 'guide': return <Guide />
+      default: return null
     }
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-body)] text-white font-sans">
-      <Sidebar
-        activeNav={selected ? null : nav}
-        onNavChange={handleNavChange}
-        oracleOnline={isOnline}
-        onHome={onHome}
-      />
-      <main className="lg:pl-60 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pt-16 lg:pt-8">
-          {renderContent()}
+    <div className="min-h-screen bg-[var(--bg-body)] font-sans">
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} actions={cmdActions} />
+      <Sidebar activeNav={selected ? null : nav} onNavChange={(id) => { setSelected(null); setDetail(null); setScanResult(null); setAlphaResult(null); setNav(id) }} oracleOnline={isOnline} onHome={onHome} />
+      <main className="lg:pl-[260px] min-h-screen">
+        <div className="sticky top-0 z-30 h-12 flex items-center justify-between px-6 bg-[var(--bg-body)]/80 backdrop-blur-xl border-b border-[var(--border)]">
+          <div className="flex items-center gap-3">
+            <span className="text-[13px] font-semibold text-[var(--text-primary)]">{navLabel[nav]}</span>
+            {selected && <><svg className="w-3 h-3 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg><span className="text-[12px] text-[var(--text-muted)] font-mono">{selected.wallet?.slice(0, 10)}...</span></>}
+          </div>
+          <div className="flex items-center gap-2">
+            <Tooltip content="Press Cmd+K to open command palette">
+              <button onClick={() => setCmdOpen(true)} className="flex items-center gap-2 px-2 py-1 rounded-md bg-[var(--bg-card)] border border-[var(--border)] text-[11px] text-[var(--text-muted)] hover:border-[var(--border-hover)] transition-colors">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" /></svg>
+                <span className="hidden sm:inline">Search</span>
+                <kbd className="px-1 py-0.5 rounded text-[9px] font-mono bg-[var(--bg-inset)] border border-[var(--border)]">&#8984;K</kbd>
+              </button>
+            </Tooltip>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--bg-card)] border border-[var(--border)] text-[10px] font-mono text-[var(--text-muted)]">
+              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`} />
+              {isOnline ? 'Online' : 'Offline'}
+            </div>
+          </div>
         </div>
+        <div className="p-6">{renderContent()}</div>
       </main>
     </div>
   )
 }
 
-function DashboardView({
-  agents, loading, error, page, totalPages, totalAgents, stats,
-  onPageChange, onAgentClick, onVerify,
-}) {
-  const statCards = [
-    {
-      label: 'Total Agents', value: stats.total,
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-        </svg>
-      ),
-      color: 'from-blue-500/10 to-cyan-500/5', textColor: 'text-blue-400',
-    },
-    {
-      label: 'Verified AI', value: stats.verified,
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      ),
-      color: 'from-emerald-500/10 to-green-500/5', textColor: 'text-emerald-400',
-    },
-    {
-      label: 'Avg Score', value: stats.avgScore,
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-        </svg>
-      ),
-      color: 'from-amber-500/10 to-yellow-500/5', textColor: 'text-amber-400',
-    },
-    {
-      label: 'Heartbeats', value: stats.heartbeats,
-      icon: (
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-        </svg>
-      ),
-      color: 'from-violet-500/10 to-purple-500/5', textColor: 'text-violet-400',
-    },
-  ]
+function DashboardView({ agents, loading, error, page, totalPages, totalAgents, stats, onPageChange, onAgentClick, onScan, onAlphaScan }) {
+  const [quickWallet, setQuickWallet] = useState('')
+  const isValid = /^0x[a-fA-F0-9]{40}$/.test(quickWallet)
 
   return (
-    <div className="space-y-8">
-      <div className="mb-2">
-        <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Dashboard</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Overview of registered agents and their AI verification status</p>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {statCards.map((s, i) => (
-          <div
-            key={i}
-            className="group relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-5 overflow-hidden
-              hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] hover:-translate-y-0.5
-              transition-all duration-300 ease-out"
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-            <div className="relative">
-              <div className={`${s.textColor} opacity-30 group-hover:opacity-60 transition-opacity duration-300 mb-3`}>
-                {s.icon}
-              </div>
-              <div className="text-3xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-white transition-colors duration-200">
-                {s.value}
-              </div>
-              <div className="text-[10px] text-[var(--text-muted)] font-medium mt-1 uppercase tracking-wider">
-                {s.label}
-              </div>
+    <div className="space-y-6 animate-in">
+      <FadeIn>
+        <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-4 hover:border-[var(--border-hover)] transition-colors">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" /></svg>
+            <span className="text-xs font-semibold text-[var(--text-secondary)]">Quick Analysis</span>
+            <Tooltip content="Analyze any wallet on Mantle">
+              <svg className="w-3.5 h-3.5 text-[var(--text-faint)] cursor-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+            </Tooltip>
+          </div>
+          <div className="flex gap-2">
+            <input value={quickWallet} onChange={e => setQuickWallet(e.target.value)} placeholder="Enter wallet address (0x...)" className="flex-1 bg-[var(--bg-inset)] border border-[var(--border)] rounded-md px-3 py-2 text-[13px] font-mono text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 transition-all" />
+            <Tooltip content="On-chain behavioral scan" side="bottom">
+              <button onClick={() => onScan(quickWallet)} disabled={!isValid} className="px-3 py-2 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] text-[12px] font-semibold border border-[var(--accent)]/20 hover:bg-[var(--accent)]/15 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 transition-all">Scan</button>
+            </Tooltip>
+            <Tooltip content="4-source alpha intelligence" side="bottom">
+              <button onClick={() => onAlphaScan(quickWallet)} disabled={!isValid} className="px-3 py-2 rounded-md bg-[#a371f7]/10 text-[#a371f7] text-[12px] font-semibold border border-[#a371f7]/20 hover:bg-[#a371f7]/15 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 transition-all">Alpha Intel</button>
+            </Tooltip>
+          </div>
+        </div>
+      </FadeIn>
+
+      <Stagger stagger={60} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: 'WALLETS SCANNED', value: stats.total },
+          { label: 'VERIFIED AGENTS', value: stats.verified },
+          { label: 'AVG ALPHA SCORE', value: stats.avgScore },
+          { label: 'TOTAL HEARTBEATS', value: stats.heartbeats },
+        ].map((s, i) => (
+          <div key={i} className="group rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-4 hover:border-[var(--border-hover)] hover:shadow-sm transition-all cursor-default">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-wider">{s.label}</span>
             </div>
+            <AnimatedNumber value={s.value} className="text-2xl font-bold text-[var(--text-primary)] font-mono" />
           </div>
         ))}
-      </div>
-      <AgentList
-        agents={agents}
-        loading={loading}
-        error={error}
-        page={page}
-        totalPages={totalPages}
-        totalAgents={totalAgents}
-        onPageChange={onPageChange}
-        onAgentClick={onAgentClick}
-        onSearch={onVerify}
-      />
+      </Stagger>
+
+      <FadeIn delay={200}>
+        <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-[var(--text-primary)]">Analyzed Wallets</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-[var(--bg-inset)] text-[var(--text-muted)]">{totalAgents}</span>
+            </div>
+          </div>
+          <AgentList agents={agents} loading={loading} error={error} page={page} totalPages={totalPages} totalAgents={totalAgents} onPageChange={onPageChange} onAgentClick={onAgentClick} onSearch={onScan} />
+        </div>
+      </FadeIn>
     </div>
   )
 }
 
-function AgentDetail({ agent, detail, history, loading, onBack }) {
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="h-4 w-24 rounded-md bg-[var(--bg-card-hover)] animate-pulse" />
-        <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden">
-          <div className="p-8 border-b border-[var(--border)] space-y-4">
-            <div className="h-6 w-64 rounded-md bg-[var(--bg-card-hover)] animate-pulse" />
-            <div className="h-4 w-40 rounded-md bg-[var(--bg-elevated)] animate-pulse" />
-            <div className="h-16 w-32 rounded-md bg-[var(--bg-card-hover)] animate-pulse ml-auto" />
-          </div>
-          <div className="p-8 space-y-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 rounded-xl bg-[var(--bg-card)] animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!detail) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-6">
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Back to dashboard
-        </button>
-        <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-6 flex items-start gap-3">
-          <svg className="w-5 h-5 text-red-400/50 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
-          </svg>
-          <p className="text-sm text-red-400/60">Failed to load agent details. The agent may not exist or data is unavailable.</p>
-        </div>
-      </div>
-    )
-  }
-
-  const score = detail.off_chain?.score || 0
-  const components = detail.off_chain?.components || {}
-  const verification = detail.verification || {}
-  const addr = agent.wallet
-    ? `${agent.wallet.slice(0, 8)}...${agent.wallet.slice(-6)}`
-    : 'Unknown'
-
-  const comps = Object.entries(components).length > 0 ? Object.entries(components) : null
-  const isVerified = score >= 70
-  const scoreColor = isVerified ? 'text-emerald-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'
-  const glowColor = isVerified
-    ? 'rgba(52,211,153,0.03)'
-    : score >= 40
-      ? 'rgba(251,191,36,0.03)'
-      : 'rgba(248,113,113,0.03)'
+function AlphaIntelView({ scanResult, scanLoading, onScan, alphaResult, alphaLoading, onAlphaScan }) {
+  const [address, setAddress] = useState('')
+  const isValid = /^0x[a-fA-F0-9]{40}$/.test(address)
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <button
-        onClick={onBack}
-        className="group inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-6"
-      >
-        <svg className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Back to dashboard
-      </button>
+    <div className="max-w-4xl space-y-6 animate-in">
+      <FadeIn>
+        <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-4 hover:border-[var(--border-hover)] transition-colors">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-[#a371f7]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+            <span className="text-xs font-semibold text-[var(--text-secondary)]">Alpha Intelligence</span>
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#a371f7]/10 text-[#a371f7]">4 sources</span>
+          </div>
+          <form onSubmit={e => { e.preventDefault(); if (isValid) onAlphaScan(address) }} className="flex gap-2">
+            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Enter wallet address (0x...)" className="flex-1 bg-[var(--bg-inset)] border border-[var(--border)] rounded-md px-3 py-2 text-[13px] font-mono text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 transition-all" />
+            <button type="button" onClick={() => onScan(address)} disabled={!isValid || scanLoading} className="px-3 py-2 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] text-[12px] font-semibold border border-[var(--accent)]/20 hover:bg-[var(--accent)]/15 disabled:opacity-40 transition-all">
+              {scanLoading ? 'Scanning...' : 'Scan'}
+            </button>
+            <button type="submit" disabled={!isValid || alphaLoading} className="px-3 py-2 rounded-md bg-[#a371f7]/10 text-[#a371f7] text-[12px] font-semibold border border-[#a371f7]/20 hover:bg-[#a371f7]/15 disabled:opacity-40 transition-all">
+              {alphaLoading ? 'Analyzing...' : 'Alpha Intel'}
+            </button>
+          </form>
+        </div>
+      </FadeIn>
 
-      <div
-        className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden
-          hover:border-[var(--border-hover)] transition-all duration-300"
-        style={{ boxShadow: `inset 0 0 80px ${glowColor}` }}
-      >
-        <div className="p-6 sm:p-8 border-b border-[var(--border)]">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-            <div className="space-y-3">
-              <div className="font-mono text-sm font-medium text-[var(--text-primary)] truncate max-w-xs sm:max-w-md">{addr}</div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <VerificationBadge
-                  status={isVerified ? 'verified' : score >= 40 ? 'pending' : 'failed'}
-                  score={score}
-                />
-                <span className="text-[10px] text-[var(--text-faint)] font-mono">
-                  {agent.heartbeats_count || 0} heartbeats
-                </span>
+      {alphaResult && !alphaResult.error && <AlphaResultCard result={alphaResult} />}
+      {scanResult && !scanResult.error && <ScanResultCard result={scanResult} />}
+
+      {(alphaResult?.error || scanResult?.error) && (
+        <FadeIn>
+          <div className="rounded-lg bg-[var(--danger)]/5 border border-[var(--danger)]/20 p-4 flex items-start gap-3">
+            <svg className="w-4 h-4 text-[var(--danger)] mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+            <div>
+              <p className="text-[13px] font-semibold text-[var(--danger)]">Error</p>
+              <p className="text-[12px] text-[var(--danger)]/60 mt-0.5 font-mono">{alphaResult?.error || scanResult?.error}</p>
+            </div>
+          </div>
+        </FadeIn>
+      )}
+
+      {!alphaResult && !scanResult && (
+        <FadeIn delay={100}>
+          <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-12 text-center hover:border-[var(--border-hover)] transition-colors">
+            <svg className="w-10 h-10 mx-auto text-[var(--text-faint)] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" /></svg>
+            <p className="text-[13px] font-semibold text-[var(--text-secondary)]">Enter a wallet address to begin</p>
+            <p className="text-[12px] text-[var(--text-muted)] mt-1">Run Deep Scan or Alpha Intelligence on any Mantle wallet</p>
+          </div>
+        </FadeIn>
+      )}
+    </div>
+  )
+}
+
+function AlphaResultCard({ result }) {
+  const { alpha_score, threshold, is_verified_agent, score_breakdown, onchain_data, sources, wallet, confidence, percentile, anomalies, behavior } = result
+  const scoreColor = alpha_score >= 70 ? 'text-[var(--success)]' : alpha_score >= 40 ? 'text-[var(--warning)]' : 'text-[var(--danger)]'
+  const statusLabel = alpha_score >= 70 ? 'AI Agent' : alpha_score >= 40 ? 'Suspicious' : 'Human'
+  const statusColor = alpha_score >= 70 ? 'bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20' : alpha_score >= 40 ? 'bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20' : 'bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/20'
+  const srcMap = { mantle_rpc: { label: 'Mantle', active: !!sources?.mantle_rpc }, nansen: { label: 'Nansen', active: !!sources?.nansen }, allora: { label: 'Allora', active: !!sources?.allora }, elfa: { label: 'Elfa', active: !!sources?.elfa } }
+  const confColor = { very_high: 'text-[var(--success)]', high: 'text-[var(--success)]', medium: 'text-[var(--warning)]', low: 'text-[var(--danger)]', very_low: 'text-[var(--danger)]' }
+
+  return (
+    <FadeIn>
+      <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden hover:border-[var(--border-hover)] transition-colors">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-[var(--border)]">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[#a371f7]/10 text-[#a371f7]">Alpha Intel</span>
+                {is_verified_agent && <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[var(--success)]/10 text-[var(--success)]">Verified</span>}
               </div>
+              <div className="font-mono text-[12px] text-[var(--text-muted)] mt-1">{wallet}</div>
             </div>
             <div className="text-right">
-              <div className={`text-6xl sm:text-7xl font-light font-mono tracking-tight ${scoreColor}`}>
-                {score}
-              </div>
-              <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mt-1">Agentic Score</div>
+              <AnimatedNumber value={alpha_score} className={`text-4xl font-bold font-mono ${scoreColor}`} />
+              <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mt-0.5">Alpha Score</div>
             </div>
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 space-y-8">
-          {verification.badge && (
-            <div className="relative rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] p-6 sm:p-8 text-center overflow-hidden">
-              <div className={`absolute inset-0 bg-gradient-to-br ${
-                isVerified ? 'from-emerald-500/5 to-emerald-400/5' : 'from-red-500/5 to-red-400/5'
-              }`} />
-              <div className="relative">
-                <div className="mb-4">
-                  {isVerified ? (
-                    <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/10 flex items-center justify-center">
-                      <svg className="w-7 h-7 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                    </div>
-                  ) : (
-                    <div className="w-14 h-14 mx-auto rounded-2xl bg-red-500/10 border border-red-500/10 flex items-center justify-center">
-                      <svg className="w-7 h-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-lg font-semibold tracking-tight text-[var(--text-primary)] mb-1">
-                  {isVerified ? 'Verified AI Agent' : 'Not a Verified AI Agent'}
-                </h3>
-                <p className="text-sm text-[var(--text-secondary)]">{verification.badge}</p>
-                <div className="inline-flex items-center gap-3 mt-4 px-4 py-2 rounded-full bg-[var(--bg-elevated)] border border-[var(--sidebar-border)]">
-                  <span className="text-[10px] text-[var(--text-muted)] font-mono">Threshold: {verification.threshold || 70}/100</span>
-                  <span className="w-px h-3 bg-[var(--text-faint)]" />
-                  <span className={`text-[10px] font-mono ${scoreColor}`}>Score: {score}/100</span>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* Sources + Status */}
+        <div className="px-5 py-3 border-b border-[var(--border)] flex items-center gap-3 flex-wrap">
+          <span className="text-[11px] font-semibold text-[var(--text-muted)]">Sources:</span>
+          {Object.entries(srcMap).map(([k, v]) => (
+            <Tooltip key={k} content={v.active ? 'Connected' : 'Stub mode'}>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono cursor-default transition-colors ${v.active ? 'bg-[var(--success)]/10 text-[var(--success)] hover:bg-[var(--success)]/15' : 'bg-[var(--bg-inset)] text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]'}`}>
+                <span className={`w-1 h-1 rounded-full ${v.active ? 'bg-[var(--success)]' : 'bg-[var(--text-faint)]'}`} />{v.label}
+              </span>
+            </Tooltip>
+          ))}
+          <span className={`ml-auto px-2 py-0.5 rounded text-[10px] font-semibold border ${statusColor}`}>{statusLabel}</span>
+        </div>
 
-          {comps ? (
-            <div>
-              <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-4">Analysis Results</div>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {comps.map(([name, data]) => {
-                  const compScore = data.score || 0
-                  const compColor = compScore >= 70
-                    ? 'bg-emerald-500/10 text-emerald-400'
-                    : compScore >= 40
-                      ? 'bg-amber-500/10 text-amber-400'
-                      : 'bg-red-500/10 text-red-400'
-                  const barColor = compScore >= 70
-                    ? 'bg-emerald-400/40'
-                    : compScore >= 40
-                      ? 'bg-amber-400/40'
-                      : 'bg-red-400/40'
-
-                  return (
-                    <div
-                      key={name}
-                      className="group rounded-xl bg-[var(--bg-card)] border border-[var(--border)] p-4
-                        hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs text-[var(--text-secondary)] font-medium">{formatName(name)}</span>
-                        <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${compColor}`}>
-                          {compScore}
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-[var(--bg-card-hover)] overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
-                          style={{ width: `${compScore}%` }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-[9px] text-[var(--text-muted)] font-mono">Confidence: {data.confidence || '--'}</span>
-                        {data.details?.data_points && (
-                          <span className="text-[9px] text-[var(--text-muted)] font-mono">{data.details.data_points} samples</span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-xl bg-[var(--bg-card)] border border-[var(--border)] p-8 text-center">
-              <svg className="w-6 h-6 mx-auto text-[var(--text-faint)] mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <p className="text-sm text-[var(--text-muted)] font-medium">Insufficient data for analysis</p>
-              <p className="text-xs text-[var(--text-faint)] mt-1">Submit more heartbeats to generate component scores</p>
-            </div>
-          )}
-
+        {/* Behavior + Confidence + Percentile */}
+        <div className="px-5 py-3 border-b border-[var(--border)] grid grid-cols-3 gap-4">
           <div>
-            <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-4">On-Chain Status</div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: 'Score', value: detail.on_chain?.score ?? '--', color: 'text-[var(--text-primary)]' },
-                { label: 'Verified', value: detail.on_chain?.verified ? 'Yes' : 'No', color: detail.on_chain?.verified ? 'text-emerald-400' : 'text-red-400' },
-                { label: 'Heartbeats', value: agent.heartbeats_count || 0, color: 'text-[var(--text-primary)]' },
-              ].map((item, i) => (
-                <div key={i} className="group rounded-xl bg-[var(--bg-card)] border border-[var(--border)] p-4 text-center hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-hover)] transition-all duration-200">
-                  <div className={`text-lg font-mono font-semibold ${item.color} group-hover:scale-105 transition-transform duration-200`}>
-                    {item.value}
-                  </div>
-                  <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider mt-1 font-medium">{item.label}</div>
+            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Behavior</div>
+            <div className="text-[12px] font-semibold text-[var(--text-primary)]">{behavior?.type?.replace(/_/g, ' ') || 'Unknown'}</div>
+            <div className="text-[10px] text-[var(--text-muted)]">{behavior?.description || ''}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Confidence</div>
+            <div className={`text-[12px] font-semibold capitalize ${confColor[confidence] || 'text-[var(--text-muted)]'}`}>{confidence || 'low'}</div>
+            <div className="text-[10px] text-[var(--text-muted)]">{onchain_data?.tx_count || 0} tx analyzed</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Percentile</div>
+            <div className="text-[12px] font-semibold text-[var(--text-primary)]">Top {100 - (percentile || 50)}%</div>
+            <div className="text-[10px] text-[var(--text-muted)]">vs all wallets</div>
+          </div>
+        </div>
+
+        {/* Anomalies */}
+        {anomalies && anomalies.length > 0 && (
+          <div className="px-5 py-3 border-b border-[var(--border)]">
+            <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-2">Anomalies Detected</div>
+            <div className="space-y-1">
+              {anomalies.map((a, i) => (
+                <div key={i} className="flex items-center gap-2 text-[11px]">
+                  <span className={`w-1.5 h-1.5 rounded-full ${a.severity === 'high' ? 'bg-[var(--danger)]' : 'bg-[var(--warning)]'}`} />
+                  <span className="text-[var(--text-primary)]">{a.detail}</span>
                 </div>
               ))}
             </div>
           </div>
+        )}
 
-          {history?.history?.length > 0 && (
-            <div>
-              <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mb-4">Score History</div>
-              <ScoreChart history={history.history} wallet={agent.wallet} />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function VerifyView({ result, loading, onVerify }) {
-  const [address, setAddress] = useState('')
-  const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(address)
-  const handleSubmit = (e) => { e.preventDefault(); if (isValidAddress) onVerify(address) }
-
-  return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">Verify Agent</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Check if a wallet address is operated by an AI agent</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <div className="relative flex-1">
-          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-faint)] pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
-          </svg>
-          <input
-            value={address}
-            onChange={e => setAddress(e.target.value)}
-            placeholder="Enter wallet address (0x...)"
-            className={`w-full bg-[var(--bg-elevated)] border rounded-xl pl-11 pr-4 py-3 text-sm font-mono text-[var(--text-primary)] placeholder-[var(--text-faint)] outline-none focus:ring-1 transition-all duration-200 ${
-              address && !isValidAddress
-                ? 'border-red-500/30 focus:border-red-500/50 focus:ring-red-500/10'
-                : 'border-[var(--border)] focus:border-[var(--border-hover)] focus:ring-[var(--text-faint)] focus:bg-[var(--bg-card-hover)]'
-            }`}
-          />
-          {address && !isValidAddress && (
-            <p className="absolute -bottom-5 left-4 text-[10px] text-red-400/50 font-mono">Invalid wallet format (expected 0x... 42 chars)</p>
-          )}
-        </div>
-        <button
-          type="submit"
-          disabled={loading || !isValidAddress}
-          className="px-6 py-3 rounded-xl bg-white text-black text-xs font-semibold
-            hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[var(--overlay)]
-            active:scale-[0.97] disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-none
-            transition-all duration-200"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <span className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-              Checking
-            </span>
-          ) : 'Verify'}
-        </button>
-      </form>
-
-      {result && (
-        <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
-          {result.error ? (
-            <div className="p-6 flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-400/50 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
-              </svg>
-              <div>
-                <p className="text-sm font-medium text-red-400/70">Verification failed</p>
-                <p className="text-xs text-red-400/40 mt-1 font-mono">{result.error}</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="p-6 sm:p-8 border-b border-[var(--border)]">
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                  <div className="space-y-3">
-                    <div className="font-mono text-sm font-medium text-[var(--text-primary)] break-all">{result.wallet}</div>
-                    <VerificationBadge
-                      status={result.is_verified_agent ? 'verified' : result.score >= 40 ? 'pending' : 'failed'}
-                      score={result.score}
-                    />
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className={`text-6xl sm:text-7xl font-light font-mono tracking-tight ${
-                      result.is_verified_agent ? 'text-emerald-400' : result.score >= 40 ? 'text-amber-400' : 'text-red-400'
-                    }`}>
-                      {result.score}
+        {/* Score Breakdown */}
+        <div className="p-5">
+          <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Score Breakdown</div>
+          <div className="space-y-3">
+            {score_breakdown && [
+              { key: 'onchain_behavior', label: 'On-chain Behavior', weight: 0.40 },
+              { key: 'entity_labels', label: 'Entity Labels', weight: 0.20 },
+              { key: 'market_verification', label: 'Market Verification', weight: 0.20 },
+              { key: 'social_context', label: 'Social Context', weight: 0.10 },
+            ].map((dim) => {
+              const data = score_breakdown[dim.key]
+              const v = data?.score ?? 0
+              return (
+                <div key={dim.key} className="group">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] font-medium text-[var(--text-primary)]">{dim.label}</span>
+                      <span className="text-[10px] font-mono text-[var(--text-muted)]">{Math.round(dim.weight * 100)}%</span>
                     </div>
-                    <div className="text-[10px] text-[var(--text-faint)] uppercase tracking-[2px] font-semibold mt-1">Score</div>
+                    <AnimatedNumber value={v} className={`text-[13px] font-bold font-mono ${v >= 70 ? 'text-[var(--success)]' : v >= 40 ? 'text-[var(--warning)]' : 'text-[var(--danger)]'}`} />
                   </div>
+                  <ProgressBar value={v} />
+                  {data?.detail && <p className="text-[10px] text-[var(--text-muted)] mt-1">{data.detail}</p>}
                 </div>
-              </div>
-              <div className="px-6 sm:px-8 py-4 flex flex-wrap gap-6 text-[10px] text-[var(--text-muted)] font-mono bg-white/[0.01]">
-                <span className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white/20" />
-                  Threshold: {result.threshold || 70}/100
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-white/20" />
-                  Heartbeats: {result.heartbeats_count || 0}
-                </span>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {!result && !loading && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mb-5">
-            <svg className="w-8 h-8 text-[var(--text-faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.3-4.3" />
-            </svg>
+              )
+            })}
           </div>
-          <p className="text-sm font-medium text-[var(--text-muted)]">Enter a wallet address</p>
-          <p className="text-xs text-[var(--text-faint)] mt-1">Paste a wallet address above to check AI verification status</p>
         </div>
-      )}
-    </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-[var(--border)] flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
+          <span>{result.analyzed_at ? new Date(result.analyzed_at * 1000).toLocaleString() : ''}</span>
+          <div className="flex items-center gap-3">
+            <span>{onchain_data?.tx_count || 0} tx</span>
+            <span>Threshold: {threshold}</span>
+            <a href={`/api/v1/badge/${wallet}`} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">Badge</a>
+          </div>
+        </div>
+      </div>
+    </FadeIn>
   )
 }
 
-function MonitorView() {
-  return <LiveMonitor />
-}
+function ScanResultCard({ result }) {
+  const a = result.analysis
+  const scoreColor = a?.is_verified_agent ? 'text-[var(--success)]' : 'text-[var(--danger)]'
 
-function Logo({ small }) {
   return (
-    <div style={{ width: small ? 28 : 32, height: small ? 28 : 32 }} className="rounded-xl bg-white/10 border border-[var(--border)] flex items-center justify-center hover:bg-white/15 transition-all duration-200">
-      <svg width={small ? 14 : 16} height={small ? 14 : 16} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
-      </svg>
-    </div>
+    <FadeIn>
+      <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] overflow-hidden hover:border-[var(--border-hover)] transition-colors">
+        <div className="px-5 py-4 border-b border-[var(--border)]">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[var(--accent-subtle)] text-[var(--accent)]">On-Chain Scan</span>
+                {a?.on_chain_tx && <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[var(--success)]/10 text-[var(--success)]">Verified</span>}
+              </div>
+              <div className="font-mono text-[12px] text-[var(--text-muted)] mt-1">{result.wallet}</div>
+            </div>
+            <div className="text-right">
+              <AnimatedNumber value={a?.overall_score || 0} className={`text-3xl font-bold font-mono ${scoreColor}`} />
+              <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mt-0.5">AI Score</div>
+            </div>
+          </div>
+        </div>
+        {a?.components && (
+          <div className="p-5">
+            <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Components</div>
+            <div className="space-y-2">
+              {Object.entries(a.components).map(([k, c]) => (
+                <div key={k} className="flex items-center gap-3">
+                  <span className="w-32 text-[11px] text-[var(--text-muted)] font-medium">{c.label}</span>
+                  <ProgressBar value={c.score} className="flex-1" />
+                  <span className="w-8 text-right text-[11px] font-mono font-semibold text-[var(--text-primary)]">{c.score}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="px-5 py-3 border-t border-[var(--border)] flex items-center justify-between text-[10px] text-[var(--text-muted)] font-mono">
+          <span>Source: {a?.source || 'onchain'}</span>
+          <a href={`/api/v1/badge/${result.wallet}`} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">Badge</a>
+        </div>
+      </div>
+    </FadeIn>
   )
 }
 
-function formatName(name) {
-  const map = {
-    time_entropy: 'Time Entropy',
-    response_time: 'Response Time',
-    decision_pattern: 'Decision Pattern',
-    data_access: 'Data Access',
-  }
-  return map[name] || name
+function AgentDetail({ agent, detail, loading, onBack }) {
+  if (loading) return (
+    <div className="space-y-4">
+      <div className="h-8 w-24 rounded bg-[var(--bg-inset)] animate-pulse" />
+      <div className="h-32 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] animate-pulse" />
+      <div className="h-48 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] animate-pulse" />
+    </div>
+  )
+
+  if (!detail || detail.error) return (
+    <div className="space-y-4">
+      <button onClick={onBack} className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+        Back
+      </button>
+      <div className="rounded-lg bg-[var(--danger)]/5 border border-[var(--danger)]/20 p-4">
+        <p className="text-[13px] text-[var(--danger)]">Failed to load details.</p>
+      </div>
+    </div>
+  )
+
+  const score = detail.off_chain?.score || 0
+  const components = detail.off_chain?.components || {}
+  const verification = detail.verification || {}
+  const comps = Object.entries(components)
+  const isVerified = score >= 70
+  const scoreColor = isVerified ? 'text-[var(--success)]' : score >= 40 ? 'text-[var(--warning)]' : 'text-[var(--danger)]'
+
+  return (
+    <div className="space-y-4 animate-in">
+      <button onClick={onBack} className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+        Back
+      </button>
+
+      <FadeIn>
+        <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-5 hover:border-[var(--border-hover)] transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="font-mono text-[13px] text-[var(--text-primary)] mb-2">{agent.wallet}</div>
+              <div className="flex items-center gap-2">
+                <VerificationBadge status={isVerified ? 'verified' : score >= 40 ? 'pending' : 'failed'} score={score} />
+                <span className="text-[11px] text-[var(--text-muted)] font-mono">{agent.heartbeats_count || 0} heartbeats</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <AnimatedNumber value={score} className={`text-5xl font-bold font-mono ${scoreColor}`} />
+              <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mt-1">Agentic Score</div>
+            </div>
+          </div>
+        </div>
+      </FadeIn>
+
+      {verification.badge && (
+        <FadeIn delay={100}>
+          <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-5 hover:border-[var(--border-hover)] transition-colors">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isVerified ? 'bg-[var(--success)]/10' : 'bg-[var(--danger)]/10'}`}>
+                {isVerified ? (
+                  <svg className="w-5 h-5 text-[var(--success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                ) : (
+                  <svg className="w-5 h-5 text-[var(--danger)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+                )}
+              </div>
+              <div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">{isVerified ? 'Verified AI Agent' : 'Not Verified'}</div>
+                <div className="text-[11px] text-[var(--text-muted)]">{verification.badge}</div>
+              </div>
+              <div className="ml-auto text-right">
+                <div className="text-[11px] text-[var(--text-muted)]">Threshold</div>
+                <div className="text-[13px] font-mono font-semibold">{verification.threshold || 70}/100</div>
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      )}
+
+      {comps.length > 0 && (
+        <FadeIn delay={150}>
+          <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-5 hover:border-[var(--border-hover)] transition-colors">
+            <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">Analysis Components</div>
+            <div className="space-y-3">
+              {comps.map(([name, data]) => {
+                const cs = data.score || 0
+                return (
+                  <div key={name}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[12px] font-medium text-[var(--text-primary)]">{name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-[var(--text-muted)] font-mono">Confidence: {data.confidence || '--'}</span>
+                        <AnimatedNumber value={cs} className={`text-[13px] font-bold font-mono ${cs >= 70 ? 'text-[var(--success)]' : cs >= 40 ? 'text-[var(--warning)]' : 'text-[var(--danger)]'}`} />
+                      </div>
+                    </div>
+                    <ProgressBar value={cs} />
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </FadeIn>
+      )}
+
+      <FadeIn delay={200}>
+        <div className="rounded-lg bg-[var(--bg-card)] border border-[var(--border)] p-5 hover:border-[var(--border-hover)] transition-colors">
+          <div className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3">On-Chain Status</div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Score', value: detail.on_chain?.score ?? '--' },
+              { label: 'Verified', value: detail.on_chain?.verified ? 'Yes' : 'No', color: detail.on_chain?.verified ? 'text-[var(--success)]' : 'text-[var(--text-muted)]' },
+              { label: 'Heartbeats', value: agent.heartbeats_count || 0 },
+            ].map((item, i) => (
+              <Tooltip key={i} content={item.label}>
+                <div className="text-center p-3 rounded-md bg-[var(--bg-inset)] hover:bg-[var(--bg-card-hover)] transition-colors cursor-default">
+                  <AnimatedNumber value={typeof item.value === 'number' ? item.value : 0} className={`text-[16px] font-bold font-mono ${item.color || 'text-[var(--text-primary)]'}`} />
+                  <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mt-1">{item.label}</div>
+                </div>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
+      </FadeIn>
+    </div>
+  )
 }

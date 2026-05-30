@@ -27,6 +27,9 @@ class HeartbeatData(BaseModel):
     signature: Optional[str] = Field(
         None, description="EIP-191 signed message for wallet verification"
     )
+    source: Optional[str] = Field(
+        "direct", description="Source of heartbeat: direct, integration"
+    )
 
 
 class AgentRegistration(BaseModel):
