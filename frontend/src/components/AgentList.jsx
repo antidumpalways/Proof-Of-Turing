@@ -38,9 +38,11 @@ export default function AgentList({ agents, loading, error, page, totalPages, to
           <tr className="border-b border-[var(--border)]">
             <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Wallet</th>
             <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Status</th>
+            <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Threat</th>
+            <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Risk</th>
             <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Beats</th>
             <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Last Seen</th>
-            <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Score</th>
+            <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">RepScore</th>
           </tr>
         </thead>
         <tbody>

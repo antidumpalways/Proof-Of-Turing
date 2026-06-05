@@ -1,9 +1,9 @@
 """
-Proof-of-Turing Oracle API
+Tripwire Oracle API
 
-Main entry point for the PoT Oracle Service.
+Main entry point for the Tripwire Oracle Service.
 Provides REST API for agent heartbeat submission, scoring, verification,
-real-time WebSocket events, and report generation.
+policy enforcement, threat detection, and real-time WebSocket events.
 
 Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 """
@@ -30,17 +30,22 @@ from analyzers.response_time import ResponseTimeAnalyzer
 from analyzers.decision_pattern import DecisionPatternAnalyzer
 from analyzers.data_access import DataAccessAnalyzer
 from engine.scorer import ScoreAggregator
-from engine.verifier import Verifier
-from blockchain.contract_interaction import PoTContract
+from engine.verifier import Verifier, GuardVerifier
+from blockchain.contract_interaction import TripwireContract
 from blockchain.event_listener import EventListener
 from database import (
     init_db, save_heartbeat, get_heartbeats, count_heartbeats,
     register_agent, get_agent, get_all_wallets,
     save_score, get_latest_score, get_score_history, get_agent_list,
+    save_threat_event, get_threat_events, get_threat_history,
+    quarantine_agent, unquarantine_agent, get_quarantine_log,
+    save_risk_score, get_latest_risk_score, get_risk_score_history,
+    get_guard_policy, save_guard_policy,
 )
 from scanner.block_scanner import BlockScanner
 from scanner.onchain_analyzer import OnChainAnalyzer
 from integrations import AlloraClient, NansenClient, ElfaClient
+from integrations.telegram_bot import telegram_bot
 from cache import cache
 
 try:
@@ -59,7 +64,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-log = logging.getLogger("pot-oracle")
+log = logging.getLogger("tripwire-oracle")
 
 # ─── Rate Limiter ───
 
@@ -93,7 +98,7 @@ def verify_heartbeat_sig(wallet: str, timestamp: int, action: str, signature: st
         log.warning("eth_account not installed — skipping signature verification")
         return True
     try:
-        msg = encode_defunct(text=f"PoT:{wallet.lower()}:{timestamp}:{action}")
+        msg = encode_defunct(text=f"Tripwire:{wallet.lower()}:{timestamp}:{action}")
         recovered = Account.recover_message(msg, signature=signature)
         return recovered.lower() == wallet.lower()
     except Exception as e:
@@ -137,7 +142,8 @@ analyzers = {
 
 scorer = ScoreAggregator()
 verifier = Verifier()
-contract = PoTContract()
+guard_verifier = GuardVerifier()
+contract = TripwireContract()
 
 # ─── On-Chain Scanner & Analyzer ───
 
@@ -154,6 +160,8 @@ log.info("Alpha Intelligence: Allora=%s Nansen=%s Elfa=%s",
          "ready" if allora.is_ready() else "stub",
          "ready" if nansen.is_ready() else "stub",
          "ready" if elfa.is_ready() else "stub")
+
+log.info("Telegram Alerts: %s", "enabled" if telegram_bot.enabled else "disabled")
 
 # ─── Event Listener ───
 
@@ -205,7 +213,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Inverse captcha oracle for verifying AI agents on Mantle",
+    description="Decentralized trust and policy enforcement layer for AI agents on Mantle",
     lifespan=lifespan,
 )
 
@@ -289,7 +297,6 @@ def _run_analysis(wallet: str) -> dict:
 
     result = scorer.aggregate(component_scores, heartbeats=heartbeats)
 
-    # Persist score to database
     save_score(
         wallet=wallet,
         overall_score=result.get("overall_score", 0),
@@ -317,9 +324,17 @@ def _format_agent_summary(wallet: str, score: dict = None) -> dict:
     st = _safe_score_val(score, "status", "no_data")
     verified = (s >= 70 and st == "verified_agent") if st != "no_data" else False
 
+    risk = get_latest_risk_score(wallet)
+    risk_score = risk["risk_score"] if risk else 0
+    threat_level = risk["threat_level"] if risk else "None"
+
+    policy = get_guard_policy(wallet)
+
     return {
         "wallet": wallet,
         "agentic_score": s,
+        "risk_score": risk_score,
+        "threat_level": threat_level,
         "status": st,
         "is_verified": verified,
         "heartbeats_count": beat_count,
@@ -332,25 +347,35 @@ def _format_agent_summary(wallet: str, score: dict = None) -> dict:
 @app.get("/api/v1/health")
 @app.get("/")
 def root():
+    onchain_stats = {"total": 0, "verified": 0, "quarantined": 0, "threats": 0}
+    if contract.is_configured():
+        try:
+            onchain_stats = contract.get_agent_counts()
+        except Exception:
+            pass
+
     return {
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "running",
         "timestamp": datetime.now().isoformat(),
         "mantle_connected": contract.is_configured(),
+        "chain_id": settings.MANTLE_CHAIN_ID,
         "signature_verification": settings.VERIFY_SIGNATURE,
+        "telegram_alerts": telegram_bot.enabled,
+        "onchain_agents": onchain_stats,
     }
 
 
-def _generate_svg_badge(wallet: str, score: int, is_verified: bool, status: str, tx_count: int = 0, onchain: bool = False) -> str:
+def _generate_svg_badge(wallet: str, score: int, risk_score: int, is_verified: bool, threat_level: str, tx_count: int = 0, onchain: bool = False) -> str:
     """Generate an SVG badge for sharing on Twitter/X."""
-    is_ai = is_verified
+    is_safe = is_verified and threat_level in ("None", "Low")
     score_display = min(score, 100)
-    score_color = "#3b82f6" if is_ai else "#f87171"
-    score_label = "Verified AI Agent" if is_ai else "Likely Human"
+    score_color = "#22c55e" if is_safe else "#f87171" if threat_level in ("Critical", "High") else "#f59e0b"
+    score_label = "Verified Safe Agent" if is_safe else f"Threat: {threat_level}" if threat_level != "None" else "Unverified"
     addr_short = f"{wallet[:6]}...{wallet[-4:]}"
-    shield = "✓" if is_ai else "✗"
-    chain = "Mantle Sepolia"
+    shield = "+" if is_safe else "!"
+    chain = "Mantle" if settings.MANTLE_CHAIN_ID == 5000 else "Mantle Sepolia"
 
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
   <defs>
@@ -364,21 +389,21 @@ def _generate_svg_badge(wallet: str, score: int, is_verified: bool, status: str,
     </linearGradient>
   </defs>
   <rect width="400" height="200" rx="16" fill="url(#bg)" stroke="url(#border)" stroke-width="1.5"/>
-  <text x="20" y="38" font-family="Georgia,serif" font-size="14" font-style="italic" fill="#888">Proof of Turing</text>
-  <text x="380" y="38" font-family="monospace" font-size="11" fill="#555" text-anchor="end">PoT</text>
+  <text x="20" y="38" font-family="Georgia,serif" font-size="14" font-style="italic" fill="#888">Tripwire</text>
+  <text x="380" y="38" font-family="monospace" font-size="11" fill="#555" text-anchor="end">Mantle</text>
   <circle cx="360" cy="32" r="5" fill="{score_color}" opacity="0.4"/>
   <circle cx="360" cy="32" r="2.5" fill="{score_color}"/>
   <text x="20" y="84" font-family="monospace" font-size="13" fill="#777">{addr_short}</text>
   <text x="200" y="84" font-family="monospace" font-size="13" fill="#777" text-anchor="end">{chain}</text>
   <rect x="20" y="105" width="360" height="1" fill="#ffffff08"/>
   <text x="20" y="140" font-family="monospace" font-size="32" font-weight="300" fill="{score_color}">{score_display}</text>
-  <text x="20" y="160" font-family="monospace" font-size="10" fill="#555" text-anchor="start">/ 100 — AI Score</text>
+  <text x="20" y="160" font-family="monospace" font-size="10" fill="#555" text-anchor="start">/ 100 — RepScore</text>
   <rect x="140" y="116" width="8" height="8" rx="2" fill="{score_color}" opacity="0.3"/>
   <rect x="140" y="116" width="{min(score_display, 100)}" height="8" rx="2" fill="{score_color}" opacity="0.6"/>
   <text x="200" y="140" font-family="Georgia,serif" font-size="16" font-style="italic" fill="{score_color}" text-anchor="end">{shield} {score_label}</text>
-  <text x="200" y="160" font-family="monospace" font-size="10" fill="#555" text-anchor="end">{tx_count} tx · {'On-chain' if onchain else 'Off-chain'}</text>
-  <text x="20" y="188" font-family="monospace" font-size="8" fill="#333">Proof-of-Turing Oracle</text>
-  <text x="380" y="188" font-family="monospace" font-size="8" fill="#333" text-anchor="end">PoT</text>
+  <text x="200" y="160" font-family="monospace" font-size="10" fill="#555" text-anchor="end">Risk: {risk_score}/100 · {tx_count} tx</text>
+  <text x="20" y="188" font-family="monospace" font-size="8" fill="#333">Tripwire Oracle on Mantle</text>
+  <text x="380" y="188" font-family="monospace" font-size="8" fill="#333" text-anchor="end">TW</text>
 </svg>'''
 
 
@@ -388,6 +413,9 @@ async def badge_wallet(wallet: str):
     profile = block_scanner.get_profile(wallet)
     result = onchain_analyzer.analyze(profile)
     tx_count = profile.get("tx_count", 0)
+    risk = get_latest_risk_score(wallet)
+    risk_score = risk["risk_score"] if risk else 0
+    threat_level = risk["threat_level"] if risk else "None"
     onchain = False
     if result["is_verified_agent"] and contract.is_configured():
         try:
@@ -398,8 +426,9 @@ async def badge_wallet(wallet: str):
     svg = _generate_svg_badge(
         wallet=wallet,
         score=result["overall_score"],
+        risk_score=risk_score,
         is_verified=result["is_verified_agent"],
-        status=result["status"],
+        threat_level=threat_level,
         tx_count=tx_count,
         onchain=onchain,
     )
@@ -527,7 +556,6 @@ async def submit_heartbeat(data: HeartbeatData):
     entry = data.model_dump()
     entry["received_at"] = int(time.time())
 
-    # Signature verification
     sig_valid = verify_heartbeat_sig(wallet, data.timestamp, data.action, data.signature or "")
     if not sig_valid:
         raise HTTPException(status_code=403, detail="Invalid signature — wallet mismatch")
@@ -535,7 +563,6 @@ async def submit_heartbeat(data: HeartbeatData):
     save_heartbeat(wallet, entry)
     result = _run_analysis(wallet)
 
-    # Submit to contract if possible
     tx_hash = None
     if result.get("status") != "insufficient_data" and contract.is_configured():
         try:
@@ -543,7 +570,6 @@ async def submit_heartbeat(data: HeartbeatData):
         except Exception as e:
             log.error("Contract submission error: %s", e)
 
-    # Broadcast via WebSocket
     asyncio.create_task(ws_manager.broadcast({
         "type": "heartbeat",
         "wallet": wallet,
@@ -590,18 +616,19 @@ async def get_agent_score(wallet: str):
             "last_updated": 0,
         }
 
-    on_chain_score = None
-    on_chain_verified = None
-    if contract.is_configured():
-        on_chain_score = contract.get_agent_score(wallet)
-        on_chain_verified = contract.is_verified_agent(wallet)
+    risk = get_latest_risk_score(wallet)
+    risk_data = {
+        "risk_score": risk["risk_score"] if risk else 0,
+        "threat_level": risk["threat_level"] if risk else "None",
+    }
 
     verification = verifier.get_verification_summary(off_chain)
 
     return {
         "wallet": wallet,
         "off_chain": off_chain,
-        "on_chain": {"score": on_chain_score, "verified": on_chain_verified},
+        "on_chain": {"score": None, "verified": None},
+        "risk": risk_data,
         "verification": verification,
     }
 
@@ -647,12 +674,32 @@ async def list_agents(
     limit: int = Query(20, ge=1, le=100),
 ):
     agents_list, total = get_agent_list(page, limit)
+
+    if contract.is_configured():
+        for agent in agents_list:
+            wallet = agent.get("wallet", "")
+            if wallet:
+                try:
+                    agent["onchain_verified"] = contract.is_verified_agent(wallet)
+                    agent["onchain_score"] = contract.get_agent_score(wallet)
+                except Exception:
+                    agent["onchain_verified"] = False
+                    agent["onchain_score"] = 0
+
+    onchain_stats = {"total": 0, "verified": 0}
+    if contract.is_configured():
+        try:
+            onchain_stats = contract.get_agent_counts()
+        except Exception:
+            pass
+
     return {
         "agents": agents_list,
         "total": total,
         "page": page,
         "limit": limit,
         "total_pages": max(1, (total + limit - 1) // limit),
+        "onchain_agents": onchain_stats,
     }
 
 
@@ -690,6 +737,7 @@ async def get_agent_report(wallet: str):
     latest = get_latest_score(wallet)
     beats = get_heartbeats(wallet)
     history = get_score_history(wallet)
+    risk = get_latest_risk_score(wallet)
 
     if not beats:
         raise HTTPException(status_code=404, detail=f"No data found for wallet {wallet}")
@@ -697,16 +745,20 @@ async def get_agent_report(wallet: str):
     score = latest["overall_score"] if latest else 0
     status = latest["status"] if latest else "no_data"
     verified = "YES" if (score >= 70 and status == "verified_agent") else "NO"
+    risk_score = risk["risk_score"] if risk else 0
+    threat_level = risk["threat_level"] if risk else "None"
 
     lines = [
         "=" * 56,
-        "  PROOF-OF-TURING — AGENT VERIFICATION REPORT",
+        "  TRIPWIRE — AGENT VERIFICATION REPORT",
         "=" * 56,
         "",
         f"  Wallet:        {wallet}",
-        f"  Agentic Score: {score}/100",
+        f"  RepScore:      {score}/100",
+        f"  Risk Score:    {risk_score}/100",
+        f"  Threat Level:  {threat_level}",
         f"  Status:        {status.replace('_', ' ').title()}",
-        f"  Verified AI:   {verified}",
+        f"  Verified Safe: {verified}",
         f"  Heartbeats:    {len(beats)}",
         f"  Generated:     {datetime.now().isoformat()}",
         "",
@@ -738,14 +790,147 @@ async def get_agent_report(wallet: str):
     lines += [
         "",
         "=" * 56,
-        "  Report generated by Proof-of-Turing Oracle",
-        "  https://github.com/antidumpalways/Proof-Of-Turing",
+        "  Report generated by Tripwire Oracle on Mantle",
         "=" * 56,
     ]
 
     return PlainTextResponse("\n".join(lines), headers={
-        "Content-Disposition": f'attachment; filename="pot-report-{wallet[:8]}.txt"',
+        "Content-Disposition": f'attachment; filename="tripwire-report-{wallet[:8]}.txt"',
     })
+
+
+# ─── Guard Status ───
+
+@app.get("/api/v1/guard-status/{wallet}")
+async def get_guard_status(wallet: str):
+    """Get guard status for an agent."""
+    wallet = wallet.lower()
+    latest = get_latest_score(wallet)
+    risk = get_latest_risk_score(wallet)
+    policy = get_guard_policy(wallet)
+
+    score = latest["overall_score"] if latest else 0
+    risk_score = risk["risk_score"] if risk else 0
+    threat_level = risk["threat_level"] if risk else "None"
+
+    guard_status = {
+        "is_guarded": score > 0,
+        "threat_level": threat_level,
+        "risk_score": risk_score,
+        "is_quarantined": threat_level == "Critical",
+    }
+
+    risk_summary = guard_verifier.get_risk_summary(risk_score, guard_status)
+
+    return {
+        "wallet": wallet,
+        "guard_status": guard_status,
+        "risk_summary": risk_summary,
+        "policy": policy,
+        "rep_score": score,
+    }
+
+
+# ─── Threats ───
+
+@app.get("/api/v1/threats")
+async def get_threats(limit: int = Query(50, ge=1, le=200)):
+    """List all detected threats."""
+    threats = get_threat_events(limit)
+    return {"threats": threats, "total": len(threats)}
+
+
+@app.get("/api/v1/threat-history/{wallet}")
+async def get_threat_history_endpoint(wallet: str):
+    """Get threat history for an agent."""
+    wallet = wallet.lower()
+    threats = get_threat_history(wallet)
+    return {"wallet": wallet, "threats": threats, "total": len(threats)}
+
+
+# ─── Quarantine ───
+
+@app.post("/api/v1/quarantine/{wallet}")
+async def quarantine_agent_endpoint(wallet: str, reason: str = "Manual quarantine"):
+    """Quarantine an agent."""
+    wallet = wallet.lower()
+    quarantine_agent(wallet, reason)
+    save_threat_event(wallet, "QUARANTINED", "Critical", reason)
+
+    await ws_manager.broadcast({
+        "type": "agent_quarantined",
+        "wallet": wallet,
+        "reason": reason,
+        "timestamp": int(time.time()),
+    })
+
+    await telegram_bot.send_quarantine_alert(wallet, reason)
+
+    return {"status": "quarantined", "wallet": wallet, "reason": reason}
+
+
+@app.post("/api/v1/unquarantine/{wallet}")
+async def unquarantine_agent_endpoint(wallet: str):
+    """Release agent from quarantine."""
+    wallet = wallet.lower()
+    unquarantine_agent(wallet)
+
+    await ws_manager.broadcast({
+        "type": "agent_unquarantined",
+        "wallet": wallet,
+        "timestamp": int(time.time()),
+    })
+
+    return {"status": "unquarantined", "wallet": wallet}
+
+
+# ─── Guard Policy ───
+
+@app.post("/api/v1/guard-policy")
+async def set_guard_policy_endpoint(policy: dict):
+    """Set guard policy for an agent."""
+    wallet = policy.get("wallet", "").lower()
+    if not wallet:
+        raise HTTPException(status_code=400, detail="wallet is required")
+
+    save_guard_policy(
+        wallet=wallet,
+        max_risk_score=policy.get("max_risk_score", 70.0),
+        auto_quarantine=policy.get("auto_quarantine", True),
+        alert_threshold=policy.get("alert_threshold", 60.0),
+    )
+
+    return {"status": "policy_set", "wallet": wallet}
+
+
+@app.get("/api/v1/guard-policy/{wallet}")
+async def get_guard_policy_endpoint(wallet: str):
+    """Get guard policy for an agent."""
+    wallet = wallet.lower()
+    policy = get_guard_policy(wallet)
+    if not policy:
+        return {"wallet": wallet, "policy": None, "message": "No custom policy set"}
+    return {"wallet": wallet, "policy": policy}
+
+
+# ─── Alerts ───
+
+@app.get("/api/v1/alerts")
+async def get_alerts(limit: int = Query(50, ge=1, le=200)):
+    """Get real-time security alerts."""
+    threats = get_threat_events(limit)
+    alerts = []
+    for t in threats:
+        alerts.append({
+            "id": t["id"],
+            "wallet": t["wallet"],
+            "type": t["threat_type"],
+            "severity": t["severity"],
+            "details": t["details"],
+            "timestamp": t["timestamp"],
+            "acknowledged": bool(t["acknowledged"]),
+        })
+    return {"alerts": alerts, "total": len(alerts)}
 
 
 # ─── WebSocket ───
@@ -755,7 +940,7 @@ async def websocket_endpoint(ws: WebSocket):
     await ws_manager.connect(ws)
     try:
         while True:
-            await ws.receive_text()  # keep connection alive
+            await ws.receive_text()
     except WebSocketDisconnect:
         ws_manager.disconnect(ws)
 

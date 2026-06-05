@@ -2,9 +2,9 @@
 Score Aggregator.
 
 Aggregates scores from all analyzers into a single agentic score (0-100).
-Now includes ML-based scoring as an additional dimension.
+Now includes ML-based scoring and RepScore calculation.
 
-Thresholds (aligned with PoTRegistry contract):
+Thresholds (aligned with TripwireRegistry contract):
 - Score >= 70: Confirmed AI Agent (Verified)
 - Score >= 60: Likely AI Agent (Pending verification)
 - Score >= 40: Uncertain (Needs more data)
@@ -21,19 +21,15 @@ class ScoreAggregator:
     """Aggregate component scores into a final agentic score, including ML."""
 
     def __init__(self):
-        # Weights for each analyzer
         self.weights = {
             "time_entropy": settings.TIME_ENTROPY_WEIGHT,
             "response_time": settings.RESPONSE_TIME_WEIGHT,
             "decision_pattern": settings.DECISION_PATTERN_WEIGHT,
             "data_access": settings.DATA_ACCESS_WEIGHT,
-            "ml_classifier": 0.20,  # ML model gets 20% weight
+            "ml_classifier": settings.ML_CLASSIFIER_WEIGHT,
         }
 
-        # Thresholds
         self.verification_threshold = settings.SCORE_VERIFICATION_THRESHOLD
-
-        # ML Classifier
         self.ml_classifier = AgentClassifier()
 
     def aggregate(
@@ -41,32 +37,20 @@ class ScoreAggregator:
         component_scores: Dict[str, dict],
         heartbeats: List[dict] = None,
     ) -> dict:
-        """
-        Aggregate component scores into a final score.
-
-        Args:
-            component_scores: Dict of analyzer_name -> analyzer result dict
-            heartbeats: Raw heartbeat data for ML model (optional)
-
-        Returns:
-            Dict with overall_score, status, components breakdown
-        """
+        """Aggregate component scores into a final score."""
         total_weight = 0.0
         weighted_sum = 0.0
         component_details = {}
 
-        # Process rule-based analyzers
         for analyzer_name, result in component_scores.items():
             weight = self.weights.get(analyzer_name, 0)
 
-            # Only include analyzers with sufficient confidence
             if result.get("score", 0) > 0 and result.get("confidence") != "low":
                 weighted_sum += result["score"] * weight
                 total_weight += weight
 
             component_details[analyzer_name] = result
 
-        # Add ML classifier score if data available
         ml_result = None
         if heartbeats and len(heartbeats) >= 3:
             try:
@@ -88,7 +72,6 @@ class ScoreAggregator:
             except Exception as e:
                 print(f"ML scoring error: {e}")
 
-        # If insufficient data from all analyzers
         if total_weight == 0:
             return {
                 "overall_score": 0,
@@ -97,10 +80,8 @@ class ScoreAggregator:
                 "timestamp": int(time.time()),
             }
 
-        # Calculate weighted score
         overall_score = int(round(weighted_sum / total_weight))
 
-        # Determine status (aligned with PoTRegistry contract threshold >= 70)
         if overall_score >= self.verification_threshold:
             status = "verified_agent"
         elif overall_score >= 60:
@@ -110,7 +91,6 @@ class ScoreAggregator:
         else:
             status = "likely_human"
 
-        # Clamp score
         overall_score = max(0, min(100, overall_score))
 
         return {
@@ -120,3 +100,55 @@ class ScoreAggregator:
             "timestamp": int(time.time()),
             "ml_enabled": self.ml_classifier.is_trained,
         }
+
+
+class RepScoreEngine:
+    """Calculate reputation score from 4 dimensions."""
+
+    def __init__(self):
+        self.weights = {
+            "compliance_rate": settings.REPScore_COMPLIANCE_WEIGHT,
+            "performance_roi": settings.REPScore_ROI_WEIGHT,
+            "community_rating": settings.REPScore_COMMUNITY_WEIGHT,
+            "liveliness": settings.REPScore_LIVELINESS_WEIGHT,
+        }
+
+    def calculate(
+        self,
+        compliance_rate: float,
+        performance_roi: float,
+        community_rating: float,
+        liveliness: float,
+    ) -> dict:
+        """Calculate RepScore from 4 dimensions (0-100 each)."""
+        score = (
+            compliance_rate * self.weights["compliance_rate"] +
+            performance_roi * self.weights["performance_roi"] +
+            community_rating * self.weights["community_rating"] +
+            liveliness * self.weights["liveliness"]
+        )
+        score = round(min(max(score, 0), 100), 2)
+
+        return {
+            "rep_score": score,
+            "components": {
+                "compliance_rate": compliance_rate,
+                "performance_roi": performance_roi,
+                "community_rating": community_rating,
+                "liveliness": liveliness,
+            },
+            "weights": self.weights,
+            "timestamp": int(time.time()),
+        }
+
+    def get_threat_level(self, risk_score: int) -> str:
+        """Get threat level from risk score."""
+        if risk_score >= settings.RISK_QUARANTINE_THRESHOLD:
+            return "Critical"
+        if risk_score >= settings.RISK_ALERT_THRESHOLD:
+            return "High"
+        if risk_score >= 40:
+            return "Medium"
+        if risk_score >= 20:
+            return "Low"
+        return "None"

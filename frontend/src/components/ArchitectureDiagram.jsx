@@ -96,7 +96,7 @@ export default function ArchitectureDiagram() {
           <text x="715" y="142" textAnchor="middle" fill="#6b7280" fontSize="8">Sepolia Testnet</text>
 
           <rect x="665" y="155" width="100" height="50" rx="4" fill="#12121a" stroke="#374151" strokeWidth="0.5"/>
-          <text x="715" y="175" textAnchor="middle" fill="#9ca3af" fontSize="8" fontWeight="500">PoTRegistry</text>
+          <text x="715" y="175" textAnchor="middle" fill="#9ca3af" fontSize="8" fontWeight="500">TripwireRegistry</text>
           <text x="715" y="188" textAnchor="middle" fill="#6b7280" fontSize="7">EIP-8004</text>
 
           {/* Data flow labels */}

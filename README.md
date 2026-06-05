@@ -1,19 +1,17 @@
 <div align="center">
 
-# Proof of Turing
+# Tripwire
 
-### Multi-source Intelligence for On-chain Agent Detection
+### Where the Wire Snaps First — Trust & Policy Enforcement for the AI Agent Economy
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?logo=solidity)](contracts/PoTRegistry.sol)
+[![Solidity](https://img.shields.io/badge/Solidity-^0.8.20-363636?logo=solidity)](contracts/)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python)](backend/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](frontend/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)](frontend/)
 [![Mantle](https://img.shields.io/badge/Mantle-Network-00D395?logo=ethereum)](https://mantle.xyz)
 
-**Turing Test Hackathon 2026 — Alpha & Data Track**
-
-**Deployed Contract:** `0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641` on [Mantle Sepolia](https://explorer.sepolia.mantle.xyz/address/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641)
+**Turing Test Hackathon 2026**
+**Tracks: Grand Champion | Agentic Economy | Alpha & Data | Best UI/UX**
 
 </div>
 
@@ -23,48 +21,47 @@
 
 - [Overview](#overview)
 - [Architecture](#architecture)
-- [Data Sources](#data-sources)
-- [Smart Contract](#smart-contract)
+- [Smart Contracts](#smart-contracts)
 - [Backend](#backend)
 - [Frontend](#frontend)
 - [Getting Started](#getting-started)
 - [API Reference](#api-reference)
 - [Testing](#testing)
+- [Tracks & Awards](#tracks--awards)
 - [Tech Stack](#tech-stack)
 
 ---
 
 ## Overview
 
-**Proof of Turing** is a multi-source intelligence platform that detects and verifies AI agents on Mantle Network. It combines on-chain behavioral analysis with external data providers to generate a comprehensive **Alpha Score** (0-100).
-
 ### The Problem
 
-As AI agents proliferate on Web3:
-- dApps need to distinguish real AI agents from humans pretending to be bots
-- MEV bots, trading bots, and sybil accounts are hard to detect
-- No on-chain mechanism exists to verify "agenthood"
+As AI agents proliferate on Web3, users face a critical trust gap:
+
+- **The Delegation Paradox:** Users want automation but fear giving agents full control over their assets
+- **Auditability Gap:** No standard way to verify if an agent's off-chain "reasoning" matches its on-chain actions
+- **Reputation Fragmentation:** New agents lack a neutral platform to prove their reliability
 
 ### The Solution
 
-Proof of Turing analyzes **4 data sources** in real-time:
+Tripwire is a trip-line defense layer for the AI agent economy on Mantle — the moment an agent's behavior crosses a red line, the wire snaps and the alarm fires. Tripwire introduces a three-pillar architecture:
 
-| Source | What It Provides | Score Weight |
-|--------|-----------------|--------------|
-| **On-chain Behavior** | Timing entropy, gas patterns, contract diversity, MEV signatures | 40% |
-| **Nansen** | Wallet labels (Smart Money, Fund, Trader, Exchange) | 20% |
-| **Allora Network** | ML inference for market pattern verification | 20% |
-| **Elfa AI** | Social sentiment and trending token correlation | 10% |
-| **Confidence Bonus** | Data availability and consistency | 10% |
+| Pillar | Description |
+|--------|-------------|
+| **GuardVault** | Programmable guardrails — users set spending limits, protocol whitelists, slippage protection |
+| **Behavioral Attestation** | Oracle-based verification — every transaction validated against policies |
+| **RepScore** | Dynamic reputation scoring — compliance, ROI, community rating, liveliness |
 
-### Use Cases
+### RepScore Formula
 
-| Use Case | How It Works |
-|----------|-------------|
-| **MEV Bot Detection** | Detect sandwich attacks, frontrunning patterns |
-| **Trading Bot Verification** | Separate automated traders from humans |
-| **Smart Money Identification** | Find professional/institutional wallets |
-| **Sybil Detection** | Identify fake accounts and bots |
+```
+RepScore = (Compliance Rate x 0.4) + (Performance ROI x 0.3) + 
+           (Community Rating x 0.2) + (Liveliness x 0.1)
+```
+
+### Insurance Fund
+
+Agents stake MNT as collateral. If they violate policies, stakes are slashed to compensate affected users — creating economic incentives for good behavior.
 
 ---
 
@@ -73,202 +70,146 @@ Proof of Turing analyzes **4 data sources** in real-time:
 ### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Client (React)                          │
-│   Dashboard · Alpha Intel · Leaderboard · Analytics · Monitor   │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ REST + WebSocket
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    FastAPI Backend (Python)                      │
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │   Scanner    │  │  Analyzers   │  │   Integrations       │  │
-│  │  (Mantle)    │  │  (8 dims)    │  │  Nansen · Allora     │  │
-│  │              │  │              │  │  Elfa AI             │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
-│         │                 │                      │              │
-│         └─────────────────┴──────────────────────┘              │
-│                             │                                   │
-│                    ┌────────▼────────┐                          │
-│                    │  Score Aggregator │                         │
-│                    │  (4 sources)     │                          │
-│                    └────────┬────────┘                          │
-└─────────────────────────────┼───────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  PoTRegistry (Solidity)                          │
-│                  Mantle Sepolia Testnet                          │
-│                                                                 │
-│  Functions: verifyAgentDirect · isVerifiedAgent · getAgentScore │
-└─────────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|                  Tripwire Dashboard (React)                 |
+|  Policy Designer - Trust Dashboard - Threat Monitor        |
++-----------------------------+-------------------------------+
+                              | REST + WebSocket
+                              v
++-------------------------------------------------------------+
+|                 Tripwire Oracle (FastAPI)                   |
+|                                                             |
+|  +--------------+ +--------------+ +------------------+   |
+|  | Compliance   | | Risk Engine  | | Behavioral       |   |
+|  | Checker      | | (4 analyzer) | | Attestation      |   |
+|  +------+-------+ +------+-------+ +--------+---------+   |
+|         +----------------+------------------+              |
+|                          v                                  |
+|                   RepScore Engine                           |
++------------------------------+------------------------------+
+                                |
+                                v
++-------------------------------------------------------------+
+|                  Tripwire Contracts (Solidity)              |
+|                                                             |
+|  GuardVault.sol - TripwireRegistry.sol - InsuranceFund     |
+|  (Vault + Policy)  (Identity + Reputation)  (Staking)     |
++-------------------------------------------------------------+
 ```
-
-### Alpha Score Calculation
-
-```
-Alpha Score = (On-chain × 0.40) + (Entity × 0.20) + (Market × 0.20) + (Social × 0.10)
-
-Where:
-- On-chain: 8-dimension behavioral analysis (timing, gas, contracts, frequency, value, input, temporal, MEV)
-- Entity: Nansen wallet labels and risk classification
-- Market: Allora ML inference cross-verification
-- Social: Elfa AI sentiment and trending correlation
-```
-
-### Scoring Thresholds
-
-| Score | Status | Description |
-|-------|--------|-------------|
-| ≥ 70 | Verified AI Agent | High confidence — auto-verified on-chain |
-| 40-69 | Suspicious | Mixed behavior — needs more data |
-| < 40 | Human | Likely human-operated wallet |
 
 ---
 
-## Data Sources
+## Smart Contracts
 
-### 1. On-chain Behavior (40%)
+### GuardVault.sol
 
-Analyzes wallet transaction patterns directly from Mantle blocks:
-
-| Dimension | What It Measures | AI Pattern | Human Pattern |
-|-----------|-----------------|------------|---------------|
-| Timing Entropy | Variability of tx intervals | Natural CV (0.3-1.5) | Too regular (<0.1) |
-| Gas Consistency | Variance in gas prices | <15% variance | >60% variance |
-| Contract Diversity | Unique contracts interacted | 10+ unique | <3 contracts |
-| Interaction Frequency | Total tx count | 100+ tx | <20 tx |
-| Value Dispersion | Variety of tx amounts | High diversity | Repeated amounts |
-| Input Complexity | Calldata complexity | 200+ bytes | Simple transfers |
-| Temporal Regularity | Schedule patterns | Variable | Cron-like fixed |
-| MEV Signature | Sandwich/frontrun detection | High back-to-back tx | None |
-
-### 2. Nansen (20%)
-
-Wallet labels and entity classification:
-
-| Label | Score Impact | Description |
-|-------|-------------|-------------|
-| Smart Money + Fund | 70 | Professional/automated trading |
-| Smart Money | 65 | Expert trader (human or AI) |
-| Bot | 85 | Known automated agent |
-| Whale | 40 | Large capital holder |
-| Exchange | 10 | CEX deposit/withdrawal |
-
-### 3. Allora Network (20%)
-
-ML inference for market pattern verification:
-- Cross-references trading patterns against decentralized models
-- Validates if behavior matches known AI/MEV strategies
-- Provides confidence-weighted scoring
-
-### 4. Elfa AI (10%)
-
-Social sentiment and market intelligence:
-- Correlates wallet activity with trending tokens
-- Measures social volume around recent trades
-- Detects coordinated social manipulation
-
----
-
-## Smart Contract
-
-**Location:** [`contracts/PoTRegistry.sol`](contracts/PoTRegistry.sol)
-
-Deployed on Mantle Sepolia at `0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641`.
-
-### Key Functions
+Programmable guardrails for AI agent asset management.
 
 | Function | Description |
 |----------|-------------|
-| `verifyAgentDirect(wallet, score)` | Oracle-only: register + verify in one tx |
-| `isVerifiedAgent(wallet)` | Check if wallet is verified AI agent |
-| `getAgentScore(wallet)` | Get current agentic score |
-| `getAllVerifiedAgents()` | List all verified agents |
-| `getTotalVerifiedAgents()` | Count of verified agents |
+| `createVault(agent)` | Create vault with policy engine |
+| `deposit()` | User deposits assets into vault |
+| `withdraw(amount)` | User withdraws assets |
+| `executeWithPolicy(protocol, amount)` | Execute trade with policy validation |
+| `setPolicy(maxTx, daily, slippage)` | Set spending limits |
+| `setProtocolAllowance(protocol, allowed)` | Whitelist a DeFi protocol |
 
-### Test Results
-```
-33 passing (2s)
-```
+**Policies enforced:**
+- Max transaction size
+- Daily spending limit
+- Slippage protection (basis points)
+- Protocol whitelist
+
+### TripwireRegistry.sol
+
+Agent identity, reputation, and threat management.
+
+| Function | Description |
+|----------|-------------|
+| `registerAgent(tokenId)` | Register agent with ERC-8004 |
+| `submitRiskScore(wallet, score, level, type, details)` | Oracle submits risk assessment |
+| `quarantineAgent(wallet, reason)` | Quarantine malicious agent |
+| `unquarantineAgent(wallet)` | Release from quarantine |
+| `getRepScore(wallet)` | Get reputation score |
+| `getThreatHistory(wallet)` | Get threat event history |
+| `getGuardStatus(wallet)` | Get guard status |
+
+### InsuranceFund.sol
+
+Staking and compensation mechanism.
+
+| Function | Description |
+|----------|-------------|
+| `stakeAsAgent()` | Agent stakes MNT as collateral |
+| `slashAgent(agent, amount, reason)` | Slash stake for violations |
+| `claimCompensation(user, amount, reason)` | Compensate affected users |
+| `getAgentStake(agent)` | Check agent's staked amount |
+| `getPoolInfo()` | Pool statistics |
 
 ---
 
 ## Backend
 
-**Location:** [`backend/`](backend/)
+### Risk Engine
 
-FastAPI application serving as the intelligence oracle.
+4 behavioral analyzers + risk detection:
 
-### Project Structure
+**Behavioral:**
+| Analyzer | What It Detects |
+|----------|----------------|
+| Time Entropy | Timing patterns (AI vs human vs script) |
+| Response Time | Market event reaction speed |
+| Decision Pattern | Strategy diversity |
+| Data Access | Data analysis behavior |
 
-```
-backend/
-├── main.py                      # API server (11 endpoints)
-├── config.py                    # Environment config
-├── cache.py                     # In-memory cache with TTL
-├── database.py                  # SQLite data layer
-├── analyzers/                   # 4 behavioral analyzers + ML
-│   ├── time_entropy.py
-│   ├── response_time.py
-│   ├── decision_pattern.py
-│   ├── data_access.py
-│   └── ml_model.py
-├── scanner/                     # On-chain block scanner
-│   ├── block_scanner.py         # Mantle RPC scanner
-│   └── onchain_analyzer.py      # 8-dimension analysis
-├── integrations/                # External data providers
-│   ├── allora.py                # Allora Network ML
-│   ├── nansen.py                # Nansen wallet labels
-│   └── elfa.py                  # Elfa AI sentiment
-├── engine/                      # Scoring & verification
-│   ├── scorer.py
-│   └── verifier.py
-├── blockchain/                  # Contract interaction
-│   ├── contract_interaction.py
-│   └── event_listener.py
-└── models/                      # Pydantic models
-    ├── agent.py
-    └── scores.py
-```
+### Telegram Alerts
+
+Real-time security notifications:
+
+| Alert Type | Trigger |
+|------------|---------|
+| THREAT DETECTED | Risk score >= 80 |
+| AGENT QUARANTINED | Auto-quarantine triggered |
+| POLICY VIOLATION | Trade blocked by policy |
+| COMPENSATION PAID | User compensated from insurance |
 
 ### API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/health` | Health check + connection status |
+| GET | `/api/v1/health` | Health check + on-chain stats |
 | POST | `/api/v1/heartbeat` | Submit agent action |
-| GET | `/api/v1/alpha/{wallet}` | **Alpha Intelligence** — 4-source analysis |
+| GET | `/api/v1/alpha/{wallet}` | 4-source alpha intelligence |
 | GET | `/api/v1/scan/{wallet}` | On-chain behavioral scan |
 | GET | `/api/v1/verify/{wallet}` | Quick verification |
-| GET | `/api/v1/badge/{wallet}` | **SVG badge** — shareable proof |
-| GET | `/api/v1/agents` | List all analyzed wallets |
+| GET | `/api/v1/badge/{wallet}` | SVG badge generation |
+| GET | `/api/v1/agents` | List all agents |
 | GET | `/api/v1/score/{wallet}` | Get detailed score |
-| GET | `/api/v1/score-history/{wallet}` | Historical scores |
-| GET | `/api/v1/report/{wallet}` | Plain-text report |
-| POST | `/api/v1/register` | Register new agent |
+| GET | `/api/v1/guard-status/{wallet}` | **Guard status** |
+| GET | `/api/v1/threats` | **List all threats** |
+| GET | `/api/v1/threat-history/{wallet}` | **Threat history** |
+| POST | `/api/v1/quarantine/{wallet}` | **Quarantine agent** |
+| POST | `/api/v1/unquarantine/{wallet}` | **Release agent** |
+| POST | `/api/v1/guard-policy` | **Set guard policy** |
+| GET | `/api/v1/alerts` | **Security alerts** |
 | WebSocket | `/api/v1/ws` | Real-time events |
 
 ---
 
 ## Frontend
 
-**Location:** [`frontend/`](frontend/)
-
-React 18 application with Tailwind CSS 4.
-
 ### Pages
 
 | Page | Description |
 |------|-------------|
-| **Landing** | Product overview + API quick start |
-| **Dashboard** | Stats, architecture diagram, wallet list |
-| **Alpha Intel** | Multi-source intelligence analysis |
-| **Leaderboard** | Ranked wallets by alpha score |
-| **Analytics** | Charts and statistics |
+| **Landing** | Product overview + architecture |
+| **Dashboard** | Stats + agent list + wallet lookup |
+| **Trust Dashboard** | RepScore + risk score + threat history |
+| **Policy Designer** | No-code policy configuration |
+| **Threat Monitor** | Real-time security alerts |
+| **Leaderboard** | Ranked wallets by RepScore + risk |
+| **Insurance Fund** | Pool stats + claim log |
 | **Activity Log** | Live WebSocket events |
-| **API Reference** | Endpoint documentation |
 
 ### Features
 
@@ -276,18 +217,7 @@ React 18 application with Tailwind CSS 4.
 - **Animated Numbers** — smooth count-up effects
 - **Progress Bars** — animated score visualization
 - **Toasts** — real-time notifications
-- **Skeleton Loaders** — smooth loading states
-- **Dark Theme** — single theme (Mantle-inspired)
-
-### Tech
-
-| Library | Purpose |
-|---------|---------|
-| React 18 | UI framework |
-| Tailwind CSS 4 | Utility-first styling |
-| Recharts | Data visualization |
-| Axios | API calls |
-| Vite 5 | Build tool |
+- **Dark Theme** — Mantle-inspired design
 
 ---
 
@@ -303,8 +233,8 @@ React 18 application with Tailwind CSS 4.
 
 ```bash
 # 1. Clone
-git clone https://github.com/antidumpalways/Proof-Of-Turing.git
-cd Proof-Of-Turing
+git clone https://github.com/yourusername/tripwire.git
+cd tripwire
 
 # 2. Install backend deps
 pip install -r backend/requirements.txt
@@ -312,79 +242,46 @@ pip install -r backend/requirements.txt
 # 3. Install frontend deps
 cd frontend && npm install && cd ..
 
-# 4. Start backend
+# 4. Train ML model
+cd backend && python train_model.py && cd ..
+
+# 5. Start backend
 cd backend && uvicorn main:app --reload --port 8000
 
-# 5. Start frontend (new terminal)
+# 6. Start frontend (new terminal)
 cd frontend && npm run dev
 
-# 6. Open http://localhost:3000
+# 7. Open http://localhost:3000
 ```
 
 ### Environment Variables
 
 ```env
-# .env (already configured for Mantle Sepolia)
-POT_REGISTRY_ADDRESS=0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641
+# .env
+GUARD_REGISTRY_ADDRESS=0x...
+GUARD_VAULT_ADDRESS=0x...
+INSURANCE_FUND_ADDRESS=0x...
 ORACLE_PRIVATE_KEY=your_key
 ORACLE_ADDRESS=your_address
-MANTLE_RPC_URL=https://rpc.sepolia.mantle.xyz
+MANTLE_RPC_URL=https://rpc.mantle.xyz
 
-# Optional API keys (for enhanced scoring)
-ALLORA_API_KEY=
-NANSEN_API_KEY=
-ELFA_API_KEY=
+# Telegram Alerts (optional)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+TELEGRAM_ALERTS_ENABLED=false
 ```
 
----
-
-## API Reference
-
-### Alpha Intelligence (4-source analysis)
+### Deploy Contracts
 
 ```bash
-curl http://localhost:8000/api/v1/alpha/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641
-```
+# Deploy to Mantle Sepolia (testnet)
+npx hardhat run scripts/deploy.js --network mantleTestnet
 
-```json
-{
-  "wallet": "0x8c13bb7d29feb35ed4adb6f8ab031222b1711641",
-  "alpha_score": 27,
-  "threshold": 70,
-  "is_verified_agent": false,
-  "status": "human",
-  "confidence": "very_low",
-  "percentile": 5,
-  "anomalies": [],
-  "behavior": {
-    "type": "mixed",
-    "description": "Mixed human/bot behavior"
-  },
-  "score_breakdown": {
-    "onchain_behavior": { "score": 29, "weight": 0.40 },
-    "entity_labels": { "score": 50, "weight": 0.20 },
-    "market_verification": { "score": 0, "weight": 0.20 },
-    "social_context": { "score": 50, "weight": 0.10 }
-  },
-  "sources": {
-    "mantle_rpc": true,
-    "nansen": false,
-    "allora": false,
-    "elfa": false
-  }
-}
-```
+# Deploy to Mantle Mainnet
+npx hardhat run scripts/deploy.js --network mantle
 
-### On-chain Scan
-
-```bash
-curl http://localhost:8000/api/v1/scan/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641
-```
-
-### SVG Badge
-
-```bash
-curl http://localhost:8000/api/v1/badge/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B1711641 > badge.svg
+# Verify on explorer
+npx hardhat verify --network mantleTestnet <CONTRACT_ADDRESS>
 ```
 
 ---
@@ -392,18 +289,34 @@ curl http://localhost:8000/api/v1/badge/0x8c13bB7d29fEB35Ed4aDb6f8ab031222B17116
 ## Testing
 
 ```bash
-# Smart contracts (33 tests)
+# Smart contracts (74 tests)
 npx hardhat test
 
-# Backend health check
+# Backend health
 curl http://localhost:8000/api/v1/health
 
-# Alpha scan any wallet
-curl http://localhost:8000/api/v1/alpha/0xYourWallet
+# Tripwire status
+curl http://localhost:8000/api/v1/guard-status/0xYourWallet
+
+# View threats
+curl http://localhost:8000/api/v1/threats
 
 # View SVG badge
 curl http://localhost:8000/api/v1/badge/0xYourWallet
 ```
+
+---
+
+## Tracks & Awards
+
+| Track | Why Tripwire Wins |
+|-------|-------------------|
+| **Grand Champion** | Infrastructure project solving fundamental trust problem for entire Mantle ecosystem |
+| **Agentic Economy (Byreal)** | Security layer for Byreal agents — verifies agent safety before execution |
+| **Alpha & Data (Mirana)** | Verifiable agent performance data + 4-source intelligence analysis |
+| **Best UI/UX** | Policy Designer (no-code) + Trust Dashboard + Threat Monitor |
+| **Community Voting** | Consumer-friendly security tool with clear value proposition |
+| **20 Project Deployment Award** | Deployed on Mantle with runnable demo |
 
 ---
 
@@ -417,13 +330,14 @@ curl http://localhost:8000/api/v1/badge/0xYourWallet
 | **Data Sources** | Nansen, Allora Network, Elfa AI |
 | **Frontend** | React 18, Tailwind CSS 4, Vite 5 |
 | **Database** | SQLite (WAL mode) |
+| **Alerts** | Telegram Bot API |
 
 ---
 
 ## License
 
-MIT — Built for [Turing Test Hackathon 2026](https://dorahacks.io) by Mantle
+MIT — Built for [Turing Test Hackathon 2026](https://dorahacks.io) on Mantle Network
 
 <div align="center">
-  <sub>Built for the Alpha & Data Track</sub>
+  <sub>Where the wire snaps first — securing the AI Agent Economy on Mantle</sub>
 </div>

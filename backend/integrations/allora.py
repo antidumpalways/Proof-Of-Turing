@@ -35,24 +35,33 @@ class AlloraClient:
 
         try:
             import requests
+            # Allora uses topic IDs for different assets/timeframes
+            # Topic 1 = ETH 5min on Sepolia testnet
+            topic_id = 1 if asset == "ETH" else 2  # Default to topic 1 for ETH
+
             resp = requests.get(
-                f"{self.BASE_URL}/allora/consumer/price/ethereum-111551111/{asset}/{timeframe}",
-                headers={"x-api-key": self.api_key},
-                timeout=10,
+                f"{self.BASE_URL}/allora/consumer/ethereum-11155111",
+                params={"allora_topic_id": topic_id},
+                headers={
+                    "accept": "application/json",
+                    "x-api-key": self.api_key,
+                },
+                timeout=15,
             )
             if resp.status_code == 200:
-                data = resp.json().get("data", {})
-                inference_data = data.get("inference_data", {})
+                data = resp.json()
+                inference_data = data.get("data", {}).get("inference_data", {})
                 return {
                     "asset": asset,
                     "timeframe": timeframe,
-                    "price": inference_data.get("network_inference", "0"),
+                    "network_inference": inference_data.get("network_inference", "0"),
                     "confidence_intervals": inference_data.get("confidence_interval_values", []),
-                    "topic_id": inference_data.get("topic_id", ""),
+                    "confidence_percentiles": inference_data.get("confidence_interval_percentiles", []),
+                    "topic_id": inference_data.get("topic_id", str(topic_id)),
                     "timestamp": inference_data.get("timestamp", 0),
                     "source": "allora",
                 }
-            log.warning("Allora API error: %s %s", resp.status_code, resp.text)
+            log.warning("Allora API error: %s %s", resp.status_code, resp.text[:200])
             return self._stub_inference(asset)
         except ImportError:
             log.warning("Allora: requests not installed")
@@ -66,8 +75,9 @@ class AlloraClient:
         return {
             "asset": asset,
             "timeframe": "5m",
-            "price": "0",
+            "network_inference": "0",
             "confidence_intervals": [],
+            "confidence_percentiles": [],
             "topic_id": "",
             "timestamp": int(time.time()),
             "source": "allora_stub",
@@ -84,21 +94,52 @@ class AlloraClient:
         if len(recent_tx) < 2:
             return {"score": 0, "confidence": "low", "detail": "Insufficient tx data"}
 
-        asset_inferences = []
-        for tx in recent_tx[:5]:
-            inference = self.get_price_inference("ETH", "5m")
-            asset_inferences.append(inference)
+        # Get ETH price inference from Allora
+        inference = self.get_price_inference("ETH", "5m")
 
-        has_inference_data = any(
-            inf.get("price", "0") != "0" for inf in asset_inferences
-        )
-        if not has_inference_data:
+        network_inference = inference.get("network_inference", "0")
+        if network_inference == "0":
             return {"score": 0, "confidence": "low", "detail": "No Allora data available"}
 
+        # Analyze confidence intervals
+        confidence_intervals = inference.get("confidence_intervals", [])
+        if len(confidence_intervals) >= 3:
+            try:
+                low = float(confidence_intervals[0])
+                high = float(confidence_intervals[-1])
+                mid = float(confidence_intervals[len(confidence_intervals) // 2])
+
+                # Calculate spread as percentage
+                spread = (high - low) / mid * 100 if mid > 0 else 100
+
+                # Lower spread = more confident prediction = higher score
+                if spread < 5:
+                    score = 85
+                    confidence = "high"
+                elif spread < 10:
+                    score = 75
+                    confidence = "medium"
+                elif spread < 20:
+                    score = 60
+                    confidence = "medium"
+                else:
+                    score = 45
+                    confidence = "low"
+
+                return {
+                    "score": score,
+                    "confidence": confidence,
+                    "detail": f"Allora ETH prediction: ${mid:.2f} (spread: {spread:.1f}%)",
+                    "inference": inference,
+                    "source": "allora",
+                }
+            except (ValueError, ZeroDivisionError, IndexError):
+                pass
+
         return {
-            "score": 75,
+            "score": 60,
             "confidence": "medium",
-            "detail": "Trading pattern consistent with market predictions",
-            "inferences": asset_inferences[:3],
+            "detail": f"Allora prediction available: {network_inference}",
+            "inference": inference,
             "source": "allora",
         }

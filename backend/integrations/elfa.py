@@ -44,12 +44,14 @@ class ElfaClient:
             )
             if resp.status_code == 200:
                 data = resp.json()
+                tokens_data = data.get("data", {})
                 return {
-                    "tokens": data.get("data", []),
+                    "tokens": tokens_data.get("data", []),
+                    "total": tokens_data.get("total", 0),
                     "time_window": time_window,
                     "source": "elfa",
                 }
-            log.warning("Elfa trending error: %s", resp.status_code)
+            log.warning("Elfa trending error: %s %s", resp.status_code, resp.text[:200])
             return self._stub_trending()
         except Exception as e:
             log.error("Elfa error: %s", e)
@@ -82,6 +84,33 @@ class ElfaClient:
         except Exception as e:
             log.error("Elfa sentiment error: %s", e)
             return {"sentiment": 0, "mention_count": 0, "source": "elfa_stub"}
+
+    @cached(ttl=120)
+    def get_keyword_mentions(self, keyword: str, time_window: str = "24h") -> dict:
+        """Get keyword mentions from Elfa AI."""
+        if not self._ready:
+            return {"mentions": [], "count": 0, "source": "elfa_stub"}
+
+        try:
+            import requests
+            resp = requests.get(
+                f"{self.BASE_URL}/v2/data/keyword-mentions",
+                params={"keyword": keyword, "timeWindow": time_window, "pageSize": 10},
+                headers={"x-elfa-api-key": self.api_key},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                data = resp.json().get("data", [])
+                return {
+                    "keyword": keyword,
+                    "mentions": data[:10],
+                    "count": len(data),
+                    "source": "elfa",
+                }
+            return {"mentions": [], "count": 0, "source": "elfa_stub"}
+        except Exception as e:
+            log.error("Elfa keyword mentions error: %s", e)
+            return {"mentions": [], "count": 0, "source": "elfa_stub"}
 
     def _stub_trending(self) -> dict:
         return {

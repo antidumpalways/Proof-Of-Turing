@@ -1,35 +1,123 @@
+// scripts/deploy.js
+// Deploy Tripwire contracts to Mantle Network
+
 const hre = require("hardhat");
 
 async function main() {
-  console.log("Deploying Proof-of-Turing to Mantle Testnet...\n");
-
-  // Deploy PoTRegistry
-  console.log("1. Deploying PoTRegistry...");
-  const PoTRegistry = await hre.ethers.getContractFactory("PoTRegistry");
-  const potRegistry = await PoTRegistry.deploy();
-  await potRegistry.waitForDeployment();
-  const potRegistryAddress = await potRegistry.getAddress();
-  console.log(`   PoTRegistry deployed to: ${potRegistryAddress}`);
-
-  // Configure PoTRegistry
-  console.log("\n2. Configuring PoTRegistry...");
   const [deployer] = await hre.ethers.getSigners();
-  const deployerAddress = await deployer.getAddress();
+  console.log("Deploying contracts with account:", deployer.address);
+  console.log("Account balance:", hre.ethers.formatEther(await hre.ethers.provider.getBalance(deployer.address)));
 
-  const setOracleTx = await potRegistry.setOracleAddress(deployerAddress);
-  await setOracleTx.wait();
-  console.log(`   Oracle address set to: ${deployerAddress}`);
+  // 1. Deploy MockERC8004 (for testing)
+  console.log("\n--- Deploying MockERC8004 ---");
+  const MockERC8004 = await hre.ethers.getContractFactory("MockERC8004");
+  const mockERC8004 = await MockERC8004.deploy();
+  await mockERC8004.waitForDeployment();
+  const mockAddress = await mockERC8004.getAddress();
+  console.log("MockERC8004 deployed to:", mockAddress);
 
-  console.log("\n✅ Deployment complete!");
-  console.log("========================");
-  console.log(`PoTRegistry: ${potRegistryAddress}`);
-  console.log(`Oracle:      ${deployerAddress}`);
-  console.log("========================");
+  // 2. Deploy GuardVault
+  console.log("\n--- Deploying GuardVault ---");
+  const GuardVault = await hre.ethers.getContractFactory("GuardVault");
+  const guardVault = await GuardVault.deploy();
+  await guardVault.waitForDeployment();
+  const vaultAddress = await guardVault.getAddress();
+  console.log("GuardVault deployed to:", vaultAddress);
+
+  // 3. Deploy InsuranceFund
+  console.log("\n--- Deploying InsuranceFund ---");
+  const InsuranceFund = await hre.ethers.getContractFactory("InsuranceFund");
+  const insuranceFund = await InsuranceFund.deploy();
+  await insuranceFund.waitForDeployment();
+  const insuranceAddress = await insuranceFund.getAddress();
+  console.log("InsuranceFund deployed to:", insuranceAddress);
+
+  // 4. Deploy TripwireRegistry
+  console.log("\n--- Deploying TripwireRegistry ---");
+  const TripwireRegistry = await hre.ethers.getContractFactory("TripwireRegistry");
+  const registry = await TripwireRegistry.deploy();
+  await registry.waitForDeployment();
+  const registryAddress = await registry.getAddress();
+  console.log("TripwireRegistry deployed to:", registryAddress);
+
+  // 5. Configure Registry
+  console.log("\n--- Configuring Registry ---");
+  await registry.setOracleAddress(deployer.address);
+  await registry.setERC8004Contract(mockAddress);
+  console.log("Oracle set to:", deployer.address);
+  console.log("ERC8004 set to:", mockAddress);
+
+  // 6. Configure GuardVault
+  console.log("\n--- Configuring GuardVault ---");
+  await guardVault.setOracleAddress(deployer.address);
+  console.log("Oracle set to:", deployer.address);
+
+  // 7. Configure InsuranceFund
+  console.log("\n--- Configuring InsuranceFund ---");
+  await insuranceFund.setOracleAddress(deployer.address);
+  console.log("Oracle set to:", deployer.address);
+
+  // Summary
+  const network = hre.network.name;
+  const chainId = hre.network.config.chainId;
+
+  console.log("\n" + "=".repeat(60));
+  console.log("  TRIPWIRE DEPLOYMENT COMPLETE");
+  console.log("=".repeat(60));
+  console.log(`  Network:         ${network} (Chain ID: ${chainId})`);
+  console.log(`  Deployer:        ${deployer.address}`);
+  console.log(`  MockERC8004:     ${mockAddress}`);
+  console.log(`  GuardVault:      ${vaultAddress}`);
+  console.log(`  InsuranceFund:   ${insuranceAddress}`);
+  console.log(`  TripwireRegistry: ${registryAddress}`);
+  console.log("=".repeat(60));
+
+  console.log("\n--- .env snippet ---");
+  console.log(`GUARD_REGISTRY_ADDRESS=${registryAddress}`);
+  console.log(`GUARD_VAULT_ADDRESS=${vaultAddress}`);
+  console.log(`INSURANCE_FUND_ADDRESS=${insuranceAddress}`);
+  console.log(`ORACLE_ADDRESS=${deployer.address}`);
+
+  // Verify on explorer (if supported)
+  if (network !== "hardhat" && network !== "localhost") {
+    console.log("\nWaiting for block confirmations before verification...");
+    await new Promise(resolve => setTimeout(resolve, 30000));
+
+    try {
+      await hre.run("verify:verify", {
+        address: vaultAddress,
+        constructorArguments: [],
+      });
+      console.log("GuardVault verified!");
+    } catch (e) {
+      console.log("GuardVault verification failed:", e.message);
+    }
+
+    try {
+      await hre.run("verify:verify", {
+        address: insuranceAddress,
+        constructorArguments: [],
+      });
+      console.log("InsuranceFund verified!");
+    } catch (e) {
+      console.log("InsuranceFund verification failed:", e.message);
+    }
+
+    try {
+      await hre.run("verify:verify", {
+        address: registryAddress,
+        constructorArguments: [],
+      });
+      console.log("TripwireRegistry verified!");
+    } catch (e) {
+      console.log("TripwireRegistry verification failed:", e.message);
+    }
+  }
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("Deployment failed:", error);
+    console.error(error);
     process.exit(1);
   });

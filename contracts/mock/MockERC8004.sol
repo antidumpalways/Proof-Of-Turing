@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "../interfaces/IERC8004.sol";
 
 /// @title MockERC8004
-/// @notice Simple mock ERC-8004 implementation for testing PoTRegistry
+/// @notice Simple mock ERC-8004 implementation for testing TripwireRegistry
 contract MockERC8004 is IERC8004 {
     mapping(uint256 => address) private _owners;
     mapping(address => uint256) private _agentIds;

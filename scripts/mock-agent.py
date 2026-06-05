@@ -1,292 +1,324 @@
-#!/usr/bin/env python3
 """
-Mock Agent for Proof-of-Turing Testing.
+Tripwire — Mock Agent Simulator
+===============================
 
-Simulates two types of agents for testing the PoT oracle:
-1. "real-ai" — Simulates LLM-based AI agent behavior (natural timing, diverse strategies)
-2. "script" — Simulates simple script behavior (regular timing, fixed strategies)
+Simulates three categories of on-chain agents to demonstrate the Tripwire
+trust, threat, and policy engine in action.
 
-Usage:
-    python scripts/mock-agent.py --type real-ai --wallet 0x...
-    python scripts/mock-agent.py --type script --wallet 0x...
-    python scripts/mock-agent.py --type both
+    GoodAgent       : healthy, predictable behavior (high RepScore)
+    SuspiciousAgent : borderline patterns (medium risk)
+    MaliciousAgent  : clearly adversarial behavior (high risk → quarantine)
+
+Each agent posts periodic heartbeats to the Tripwire oracle.  The oracle
+attests behavior, raises threat events, and (for the malicious one) triggers
+auto-quarantine when the risk threshold is exceeded.
+
+Usage
+-----
+    python mock-agent.py                # run all 3 agents
+    python mock-agent.py --profile good # only one profile
+    python mock-agent.py --duration 60  # stop after N seconds
+
+Environment
+-----------
+    TRIPWIRE_API     default: http://127.0.0.1:8000
 """
+
+from __future__ import annotations
+
 import argparse
-import json
+import logging
+import os
 import random
-import time
 import sys
-from typing import Optional, Tuple
-from datetime import datetime
+import time
+from dataclasses import dataclass, field
+from typing import List, Optional
 
-try:
-    import requests
-except ImportError:
-    print("Error: requests library required. pip install requests")
-    sys.exit(1)
+import requests
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger("mock-agent")
 
-# ─── Configuration ───
+API_BASE = os.getenv("TRIPWIRE_API", "http://127.0.0.1:8000").rstrip("/")
+HEARTBEAT_URL = f"{API_BASE}/api/v1/heartbeat"
+REGISTER_URL = f"{API_BASE}/api/v1/register"
+GUARD_STATUS_URL = f"{API_BASE}/api/v1/guard-status"
+THREATS_URL = f"{API_BASE}/api/v1/threats"
 
-DEFAULT_ORACLE_URL = "http://localhost:8000"
-
-ACTIONS = [
-    "swap", "add_liquidity", "remove_liquidity", "trade", "check_balance"
-]
-
-ASSETS = ["MNT", "mETH", "USDY", "fBTC", "USDC"]
-
-STRATEGIES_AI = [
-    "grid_trading", "trend_following", "mean_reversion",
-    "yield_farming", "arbitrage", "liquidity_provision",
-]
-
-STRATEGIES_SCRIPT = ["fixed_grid", "simple_buy"]
+ASSETS = ["MNT", "mETH", "USDY", "fBTC"]
+STRATEGIES = ["grid", "trend", "mean_reversion", "arb", "yield"]
+ACTIONS = ["trade", "swap", "add_liquidity", "remove_liquidity", "check_balance"]
 
 
-class RealAIAgent:
-    """Simulates an LLM-based AI agent with natural behavior patterns."""
+# ─────────────────────────────────────────────────────────────────────────────
+# Helpers
+# ─────────────────────────────────────────────────────────────────────────────
 
-    def __init__(self, wallet: str):
-        self.wallet = wallet
-        self.last_action_time = 0
-        self.market_events = ["price_up_5pct", "price_down_3pct", "volume_spike", "new_pool"]
+def fake_wallet(seed: str) -> str:
+    """Deterministic pseudo wallet for the agent profile."""
+    h = abs(hash(seed)) % (16**40)
+    return "0x" + format(h, "040x")
 
-    def generate_heartbeat(self) -> dict:
-        """Generate a heartbeat with natural AI-like timing and diversity."""
 
-        # Natural timing: 2-8 seconds between actions
-        now = int(time.time())
-        if self.last_action_time > 0:
-            # Variable delay (2-8 seconds with normal distribution)
-            delay = min(abs(random.gauss(4.0, 1.5)) + 1.0, 8.0)
-            time.sleep(min(delay, 8.0))
+def register(wallet: str, token_id: int) -> None:
+    """Best-effort registration with the Tripwire registry."""
+    try:
+        requests.post(
+            REGISTER_URL,
+            json={"wallet": wallet, "token_id": token_id, "timestamp": int(time.time())},
+            timeout=5,
+        )
+    except requests.RequestException as e:
+        log.debug("register() failed for %s: %s", wallet, e)
 
-        self.last_action_time = int(time.time())
 
-        # Diverse action selection (weighted)
-        action = random.choices(
-            ACTIONS,
-            weights=[0.35, 0.15, 0.10, 0.30, 0.10],
-            k=1
-        )[0]
+def send_heartbeat(payload: dict) -> Optional[dict]:
+    """POST a heartbeat; return parsed response or None on failure."""
+    try:
+        r = requests.post(HEARTBEAT_URL, json=payload, timeout=10)
+        if r.status_code == 200:
+            return r.json()
+        log.debug("heartbeat %s: HTTP %s", payload.get("wallet"), r.status_code)
+    except requests.RequestException as e:
+        log.debug("heartbeat network error: %s", e)
+    return None
 
-        # Diverse asset selection
-        asset = random.choice(ASSETS)
 
-        # Variable trade amounts (50-10000)
-        amount = round(random.uniform(50, 10000), 2)
+def guard_status(wallet: str) -> Optional[dict]:
+    try:
+        r = requests.get(f"{GUARD_STATUS_URL}/{wallet}", timeout=5)
+        if r.status_code == 200:
+            return r.json()
+    except requests.RequestException:
+        pass
+    return None
 
-        # Diverse strategy selection
-        strategy = random.choice(STRATEGIES_AI)
 
-        # Occasionally respond to market events (30% chance)
-        market_event = None
-        if random.random() < 0.3:
-            market_event = random.choice(self.market_events)
+# ─────────────────────────────────────────────────────────────────────────────
+# Agent Profiles
+# ─────────────────────────────────────────────────────────────────────────────
 
+@dataclass
+class HeartbeatRecord:
+    wallet: str
+    action: str
+    amount: float
+    gas_used: int
+    asset: str
+    strategy: str
+    timestamp: int = field(default_factory=lambda: int(time.time()))
+
+    def to_payload(self) -> dict:
         return {
             "wallet": self.wallet,
-            "timestamp": self.last_action_time,
-            "action": action,
-            "asset": asset,
-            "amount": amount,
-            "strategy_type": strategy,
-            "market_event": market_event,
+            "timestamp": self.timestamp,
+            "action": self.action,
+            "gas_used": self.gas_used,
+            "asset": self.asset,
+            "amount": self.amount,
+            "strategy_type": self.strategy,
+            "market_event": "oracle_update",
+            "source": "mock-agent",
         }
 
 
-class ScriptAgent:
-    """Simulates a simple script/bot with very regular behavior patterns."""
+class BaseAgent:
+    """Common agent behavior: registration + heartbeat loop."""
 
-    def __init__(self, wallet: str):
-        self.wallet = wallet
-        self.counter = 0
+    name = "BaseAgent"
 
-    def generate_heartbeat(self) -> dict:
-        """Generate a heartbeat with suspiciously regular timing."""
+    def __init__(self, seed: str, token_id: int):
+        self.wallet = fake_wallet(seed)
+        self.token_id = token_id
+        self.history: List[HeartbeatRecord] = []
+        log.info("→ %s wallet: %s", self.name, self.wallet)
+        register(self.wallet, self.token_id)
 
-        # Fixed timing: exactly 3.0 seconds (too perfect)
-        time.sleep(3.0)
+    def heartbeat(self) -> Optional[dict]:
+        rec = self.next_record()
+        self.history.append(rec)
+        return send_heartbeat(rec.to_payload())
 
-        self.counter += 1
-        now = int(time.time())
+    def next_record(self) -> HeartbeatRecord:
+        raise NotImplementedError
 
-        # Fixed action pattern (always the same sequence)
-        actions_cycle = ["check_balance", "check_balance", "swap", "check_balance"]
-        action = actions_cycle[self.counter % len(actions_cycle)]
+    def loop(self, duration: int, interval: float):
+        log.info("[%s] loop start — duration=%ss interval=%.1fs", self.name, duration, interval)
+        end = time.time() + duration
+        sent = 0
+        while time.time() < end:
+            resp = self.heartbeat()
+            sent += 1
+            if resp:
+                self.on_response(resp, sent)
+            time.sleep(interval)
+        log.info("[%s] loop end — %d heartbeats sent", self.name, sent)
 
-        # Fixed asset (always MNT)
-        asset = "MNT"
-
-        # Fixed amount (always 100)
-        amount = 100.0
-
-        # Fixed strategy
-        strategy = "fixed_grid"
-
-        return {
-            "wallet": self.wallet,
-            "timestamp": now,
-            "action": action,
-            "asset": asset,
-            "amount": amount,
-            "strategy_type": strategy,
-            "market_event": None,
-        }
-
-
-def submit_heartbeat(heartbeat: dict, oracle_url: str) -> Optional[dict]:
-    """Submit heartbeat to PoT oracle."""
-    try:
-        response = requests.post(
-            f"{oracle_url}/api/v1/heartbeat",
-            json=heartbeat,
-            headers={"Content-Type": "application/json"},
-            timeout=10,
+    def on_response(self, response: dict, n: int):
+        analysis = response.get("analysis") or {}
+        score = analysis.get("overall_score", "?")
+        status = analysis.get("status", "?")
+        log.info(
+            "[%s] #%d score=%s status=%s heartbeats=%s",
+            self.name, n, score, status, response.get("heartbeats_count"),
         )
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(f"  Error: {response.status_code} - {response.text}")
-            return None
-    except requests.exceptions.ConnectionError:
-        print(f"  Error: Cannot connect to oracle at {oracle_url}")
-        print(f"  Make sure the backend is running: uvicorn main:app --reload --port 8000")
-        return None
-    except Exception as e:
-        print(f"  Error: {e}")
-        return None
 
 
-def print_status(result: dict, count: int):
-    """Print the latest analysis result."""
-    if not result:
-        return
+class GoodAgent(BaseAgent):
+    """Predictable, human-like cadence → high RepScore."""
 
-    analysis = result.get("analysis", {})
-    score = analysis.get("overall_score", 0)
-    status = analysis.get("status", "unknown")
+    name = "GoodAgent"
 
-    if score >= 70:
-        marker = "[HIGH]"
-    elif score >= 40:
-        marker = "[MED]"
-    else:
-        marker = "[LOW]"
-    print(f"  Heartbeat #{count} | Score: {score}/100 {marker} | Status: {status}")
-
-
-def check_final_status(wallet: str, oracle_url: str):
-    """Check final verification status for a wallet."""
-    try:
-        resp = requests.get(
-            f"{oracle_url}/api/v1/verify/{wallet}",
-            timeout=10,
+    def next_record(self) -> HeartbeatRecord:
+        return HeartbeatRecord(
+            wallet=self.wallet,
+            action=random.choice(["swap", "add_liquidity", "check_balance"]),
+            amount=round(random.uniform(10, 250), 4),
+            gas_used=random.randint(80_000, 180_000),
+            asset=random.choice(ASSETS),
+            strategy=random.choice(STRATEGIES[:3]),
         )
-        if resp.status_code == 200:
-            data = resp.json()
-            print(f"  Final Verification:")
-            print(f"     Score: {data.get('score', '?')}/100")
-            print(f"     Badge: {data.get('badge', '?')}")
-            print(f"     Verdict: {data.get('verdict', '?')}")
-    except Exception:
+
+
+class SuspiciousAgent(BaseAgent):
+    """Mildly irregular — occasional oversized trade, fast cadence."""
+
+    name = "SuspiciousAgent"
+
+    def next_record(self) -> HeartbeatRecord:
+        # 25 % of the time: slightly large trade or high gas
+        is_spike = random.random() < 0.25
+        return HeartbeatRecord(
+            wallet=self.wallet,
+            action=random.choice(ACTIONS),
+            amount=round(random.uniform(50, 1_500) if is_spike else random.uniform(20, 400), 4),
+            gas_used=random.randint(150_000, 400_000) if is_spike else random.randint(90_000, 200_000),
+            asset=random.choice(ASSETS),
+            strategy=random.choice(STRATEGIES),
+        )
+
+
+class MaliciousAgent(BaseAgent):
+    """Adversarial pattern — MEV-style, sandwich, flash-loan bursts.
+
+    Targets: high risk score, threat events fired, auto-quarantine.
+    """
+
+    name = "MaliciousAgent"
+
+    def next_record(self) -> HeartbeatRecord:
+        # 40 % of the time: large swaps on obscure pairs, with huge gas
+        is_attack = random.random() < 0.4
+        action = random.choice(["swap", "swap", "swap", "add_liquidity"]) if is_attack \
+            else random.choice(ACTIONS)
+        return HeartbeatRecord(
+            wallet=self.wallet,
+            action=action,
+            amount=round(random.uniform(5_000, 50_000) if is_attack else random.uniform(100, 5_000), 4),
+            gas_used=random.randint(600_000, 2_000_000) if is_attack else random.randint(150_000, 400_000),
+            asset=random.choice(["USDC", "WETH", "MNT", "MEME", "SCAM"]),
+            strategy="sandwich" if is_attack else random.choice(STRATEGIES),
+        )
+
+    def on_response(self, response: dict, n: int):
+        super().on_response(response, n)
+        if n % 5 == 0:
+            st = guard_status(self.wallet)
+            if st:
+                log.warning(
+                    "[%s] guard status: risk=%s threat=%s quarantined=%s",
+                    self.name,
+                    st.get("risk_score"),
+                    st.get("threat_level"),
+                    st.get("is_quarantined"),
+                )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────────────────────────────────────────
+
+PROFILES = {
+    "good": GoodAgent,
+    "suspicious": SuspiciousAgent,
+    "malicious": MaliciousAgent,
+}
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Mock Agent simulator for Tripwire")
+    p.add_argument(
+        "--profile",
+        choices=list(PROFILES.keys()) + ["all"],
+        default="all",
+        help="which agent profile to run (default: all)",
+    )
+    p.add_argument("--duration", type=int, default=120, help="seconds to run each agent")
+    p.add_argument("--interval", type=float, default=4.0, help="seconds between heartbeats")
+    p.add_argument(
+        "--api",
+        default=API_BASE,
+        help=f"Tripwire API base URL (default: {API_BASE})",
+    )
+    p.add_argument("--once", action="store_true", help="send a single heartbeat and exit")
+    return p.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    global API_BASE, HEARTBEAT_URL, REGISTER_URL, GUARD_STATUS_URL, THREATS_URL
+    API_BASE = args.api.rstrip("/")
+    HEARTBEAT_URL = f"{API_BASE}/api/v1/heartbeat"
+    REGISTER_URL = f"{API_BASE}/api/v1/register"
+    GUARD_STATUS_URL = f"{API_BASE}/api/v1/guard-status"
+    THREATS_URL = f"{API_BASE}/api/v1/threats"
+
+    log.info("Tripwire API: %s", API_BASE)
+
+    profiles = list(PROFILES.keys()) if args.profile == "all" else [args.profile]
+
+    # quick health check
+    try:
+        r = requests.get(f"{API_BASE}/api/v1/health", timeout=3)
+        log.info("health: %s", "ok" if r.status_code == 200 else f"HTTP {r.status_code}")
+    except requests.RequestException as e:
+        log.error("cannot reach Tripwire API: %s", e)
+        return 1
+
+    for idx, name in enumerate(profiles, start=1):
+        cls = PROFILES[name]
+        agent = cls(seed=f"{name}-{idx}", token_id=1000 + idx)
+        if args.once:
+            resp = agent.heartbeat()
+            if resp:
+                log.info("[%s] single heartbeat ok: %s", name, resp.get("status"))
+            continue
+        agent.loop(duration=args.duration, interval=args.interval)
+
+    # final threat summary
+    try:
+        r = requests.get(THREATS_URL, params={"limit": 10}, timeout=5)
+        if r.status_code == 200:
+            threats = (r.json() or {}).get("threats") or []
+            log.info("Recent threats (%d):", len(threats))
+            for t in threats[:5]:
+                log.info(
+                    "  - %s [%s] %s",
+                    t.get("wallet"),
+                    t.get("severity"),
+                    t.get("description") or t.get("threat_type"),
+                )
+    except requests.RequestException:
         pass
 
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Proof-of-Turing Mock Agent",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python scripts/mock-agent.py --type real-ai --wallet 0xAI123...
-  python scripts/mock-agent.py --type script --wallet 0xBOT456...
-  python scripts/mock-agent.py --type both
-        """,
-    )
-    parser.add_argument(
-        "--type",
-        choices=["real-ai", "script", "both"],
-        default="both",
-        help="Type of agent to simulate (default: both)",
-    )
-    parser.add_argument(
-        "--wallet",
-        type=str,
-        help="Wallet address for the agent",
-    )
-    parser.add_argument(
-        "--count",
-        type=int,
-        default=20,
-        help="Number of heartbeats to send (default: 20)",
-    )
-    parser.add_argument(
-        "--oracle-url",
-        type=str,
-        default=DEFAULT_ORACLE_URL,
-        help=f"Oracle API URL (default: {DEFAULT_ORACLE_URL})",
-    )
-
-    args = parser.parse_args()
-    oracle_url = args.oracle_url
-
-    print("=" * 60)
-    print("Proof-of-Turing -- Mock Agent Simulator")
-    print("=" * 60)
-    print()
-
-    agents = []
-
-    if args.type in ("real-ai", "both"):
-        wallet_ai = args.wallet or f"0xAI_{random.randint(1000, 9999)}"
-        agents.append(("[AI] REAL AI AGENT", wallet_ai, RealAIAgent(wallet_ai)))
-        print(f"  [AI] Real AI Agent: {wallet_ai}")
-
-    if args.type in ("script", "both"):
-        wallet_script = f"0xBOT_{random.randint(1000, 9999)}" if args.type == "both" else (
-            args.wallet or f"0xBOT_{random.randint(1000, 9999)}"
-        )
-        agents.append(("[SCRIPT] SCRIPT AGENT", wallet_script, ScriptAgent(wallet_script)))
-        print(f"  [SCRIPT] Script Agent:  {wallet_script}")
-
-    print()
-    print(f"  Submitting {args.count} heartbeats per agent...")
-    print(f"  Oracle: {oracle_url}")
-    print()
-
-    for agent_name, wallet, agent in agents:
-        print(f"--- {agent_name} ---")
-        print(f"  Wallet: {wallet}")
-        print()
-
-        for i in range(args.count):
-            heartbeat = agent.generate_heartbeat()
-            result = submit_heartbeat(heartbeat, oracle_url)
-
-            if result:
-                print_status(result, i + 1)
-            else:
-                print(f"  Heartbeat #{i + 1}: Failed")
-
-            # Small delay between heartbeats for readability
-            time.sleep(0.1)
-
-        print()
-        check_final_status(wallet, oracle_url)
-        print()
-
-    print("=" * 60)
-    print("Simulation Complete!")
-    print("=" * 60)
-    print()
-    print("To check results, open:")
-    print("  Frontend: http://localhost:3000")
-    print("  API:      http://localhost:8000/api/v1/agents")
-    print()
-    print()
+    log.info("done")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

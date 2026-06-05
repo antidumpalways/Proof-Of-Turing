@@ -1,7 +1,7 @@
 """
 Event Listener.
 
-Listens for on-chain events from the PoTRegistry contract.
+Listens for on-chain events from the TripwireRegistry contract.
 Listens for:
 - HeartbeatReceived: When agents submit heartbeats
 - AgentRegistered: When new agents register
@@ -15,18 +15,24 @@ from config import settings
 
 
 class EventListener:
-    """Listen for events from the PoTRegistry contract."""
+    """Listen for events from the TripwireRegistry contract."""
 
     def __init__(self):
         self.w3 = Web3(Web3.HTTPProvider(settings.MANTLE_RPC_URL))
         self.contract_address = settings.POT_REGISTRY_ADDRESS
 
-        # Load ABI
+        # Load ABI (prefer Tripwire, fall back to legacy PoT)
         abi_path = os.path.join(
             os.path.dirname(__file__),
             "..", "..", "artifacts", "contracts",
-            "PoTRegistry.sol", "PoTRegistry.json"
+            "TripwireRegistry.sol", "TripwireRegistry.json"
         )
+        if not os.path.exists(abi_path):
+            abi_path = os.path.join(
+                os.path.dirname(__file__),
+                "..", "..", "artifacts", "contracts",
+                "PoTRegistry.sol", "PoTRegistry.json"
+            )
         if os.path.exists(abi_path):
             with open(abi_path) as f:
                 contract_json = json.load(f)

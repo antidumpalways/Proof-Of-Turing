@@ -3,7 +3,7 @@ import axios from 'axios'
 
 const API_BASE = '/api/v1'
 
-export function usePotData() {
+export function useTripwireData() {
   const [agents, setAgents] = useState([])
   const [totalAgents, setTotalAgents] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -71,6 +71,50 @@ export function usePotData() {
     return res.data
   }, [])
 
+  // ─── Guard-Specific APIs ───
+
+  const getGuardStatus = useCallback(async (wallet) => {
+    const res = await axios.get(`${API_BASE}/guard-status/${wallet}`)
+    return res.data
+  }, [])
+
+  const getThreats = useCallback(async (limit = 50) => {
+    const res = await axios.get(`${API_BASE}/threats`, { params: { limit } })
+    return res.data
+  }, [])
+
+  const getThreatHistory = useCallback(async (wallet) => {
+    const res = await axios.get(`${API_BASE}/threat-history/${wallet}`)
+    return res.data
+  }, [])
+
+  const quarantineAgent = useCallback(async (wallet, reason = 'Manual quarantine') => {
+    const res = await axios.post(`${API_BASE}/quarantine/${wallet}`, null, {
+      params: { reason },
+    })
+    return res.data
+  }, [])
+
+  const unquarantineAgent = useCallback(async (wallet) => {
+    const res = await axios.post(`${API_BASE}/unquarantine/${wallet}`)
+    return res.data
+  }, [])
+
+  const setGuardPolicy = useCallback(async (wallet, policy) => {
+    const res = await axios.post(`${API_BASE}/guard-policy`, { wallet, ...policy })
+    return res.data
+  }, [])
+
+  const getGuardPolicy = useCallback(async (wallet) => {
+    const res = await axios.get(`${API_BASE}/guard-policy/${wallet}`)
+    return res.data
+  }, [])
+
+  const getAlerts = useCallback(async (limit = 50) => {
+    const res = await axios.get(`${API_BASE}/alerts`, { params: { limit } })
+    return res.data
+  }, [])
+
   useEffect(() => {
     fetchStatus()
   }, [fetchStatus])
@@ -97,5 +141,13 @@ export function usePotData() {
     submitHeartbeat,
     getScoreHistory,
     fetchStatus,
+    getGuardStatus,
+    getThreats,
+    getThreatHistory,
+    quarantineAgent,
+    unquarantineAgent,
+    setGuardPolicy,
+    getGuardPolicy,
+    getAlerts,
   }
 }
